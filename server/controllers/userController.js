@@ -8,6 +8,8 @@ const clerkWebhooks = async (req, res) => {
     //Create a Svix instance with clerk webhook secret
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
+    console.log(req.body);
+
     //If the svix id, timestamp and signature is correct according to the clerk webhook secret then the process will proceed further
     await whook.verify(JSON.stringify(req.body), {
         "svix-id": req.headers["svix-id"],
@@ -19,11 +21,13 @@ const clerkWebhooks = async (req, res) => {
     //Checking the type of the event
     const { data, type } = req.body;
 
+    console.log(data, type);
+
     switch (type) {
 
         case "user.created": {
 
-            const user = userModel.findOne({ email: data.email_addresses[0].email_address });
+            const user = await userModel.findOne({ email: data.email_addresses[0].email_address });
 
             if(!user){
 
@@ -35,13 +39,15 @@ const clerkWebhooks = async (req, res) => {
                     photo: data.image_url
                 }
 
+                console.log(userData);
+
                 await userModel.create(userData);
 
             }
             else{
 
                 //update the new clerkId of the old user
-                userModel.findByIdAndUpdate(user._id, {clerkId: data.id});
+                await userModel.findByIdAndUpdate(user._id, {clerkId: data.id});
 
             }
 
