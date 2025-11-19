@@ -3,6 +3,7 @@ import 'dotenv/config'
 import cors from 'cors'
 import connectDB from './configs/mongoDB.js'
 import ExpressError from './middlewares/ExpressError.js'
+import userRouter from './routes/userRoutes.js'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,8 @@ app.use(express.json());
 app.get('/', (req, res)=>{
     res.send("Server is Live!");
 });
+
+app.use('/api/user', userRouter);
 
 app.use((req,res,next)=>{
     next(new ExpressError(404, "Page Not Found"));
