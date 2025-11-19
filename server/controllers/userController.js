@@ -65,7 +65,7 @@ const clerkWebhooks = async (req, res) => {
                 photo: data.image_url
             };
 
-            await userModel.findByIdAndUpdate( {clerkId: data.id}, userData );
+            await userModel.findOneAndUpdate( {clerkId: data.id}, userData );
 
             res.json({});
 
