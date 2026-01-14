@@ -17,6 +17,7 @@
 
 .reset-tw :not(pre):not(code){
     all: revert;
+    margin: 0;
 }
 
 .loader div:nth-child(2){
@@ -25,4 +26,22 @@
 
 .loader div:nth-child(3){
     animation-delay: 0.4s;
+}
+
+@theme {
+  --animate-modal-fall: modalFall 450ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes modalFall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(10px) rotate(6deg) scale(0.98);
+  }
+  100% {
+    transform: translateY(120vh) rotate(12deg) scale(0.95);
+    opacity: 0;
+  }
 }

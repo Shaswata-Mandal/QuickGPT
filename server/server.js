@@ -4,6 +4,9 @@ import cors from 'cors'
 import connectDB from './configs/mongoDB.js'
 import ExpressError from './middlewares/ExpressError.js'
 import userRouter from './routes/userRoutes.js'
+import chatRouter from './routes/chatRoutes.js'
+import messageRouter from './routes/messageRoutes.js'
+import creditRouter from './routes/creditRoutes.js'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +25,9 @@ app.get('/', (req, res)=>{
 });
 
 app.use('/api/user', userRouter);
+app.use('/api/chat', chatRouter);
+app.use('/api/message', messageRouter);
+app.use('/api/plans', creditRouter);
 
 app.use((req,res,next)=>{
     next(new ExpressError(404, "Page Not Found"));

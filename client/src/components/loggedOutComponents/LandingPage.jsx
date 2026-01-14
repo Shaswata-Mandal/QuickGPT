@@ -1,15 +1,11 @@
 import React, { useState } from 'react'
-import { testimonials, dummyPlans, assets } from '../assets/assets.js'
-import Credits from '../pages/Credits.jsx';
-import { useClerk, UserButton, useUser } from '@clerk/clerk-react'
-import { useAppContext } from '../context/AppContext.jsx';
+import { testimonials, assets } from '../../assets/assets.js'
+import { useClerk } from '@clerk/clerk-react'
+import LoggedOutNavbar from './LoggedOutNavbar.jsx';
 
 //Disclaimer: This component was generated using AI and integrated within this project.
 
 const LandingPage = () => {
-
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const {user, isSignedIn} = useAppContext();
 
     const { openSignIn } = useClerk();
 
@@ -37,30 +33,13 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
 
             {/* Navigation */}
-            <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                    <div className="flex justify-between items-center h-16">
-
-                        <img src={assets.logo_full_dark} className='w-45' alt="" />
-
-                        <div className="ml-4 flex items-center md:ml-6 space-x-3">
-                            <button onClick={()=>handleSignInClick()} className="cursor-pointer text-gray-600 hover:text-gray-900 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors">Sign In</button>
-                            <button onClick={()=>handleSignInClick()} className="cursor-pointer hidden md:block bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-105">Get Started Free</button>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </nav>
+            <LoggedOutNavbar/>
 
             {/* Hero Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-5 pt-20 pb-16 text-center">
+            <div className="mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-5 pt-20 pb-16 text-center">
 
                 <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
                     Experience the Power of
@@ -124,13 +103,6 @@ const LandingPage = () => {
                         ))}
                     </div>
                 </div>
-            </div>
-
-            {/* Pricing Section */}
-            <div className='pt-3'>
-
-                <Credits />
-
             </div>
 
             {/* FAQ Section */}

@@ -1,14 +1,14 @@
 import { Webhook } from 'svix'
 import userModel from '../models/userModel.js'
+import chatModel from '../models/chatModel.js';
+import transactionModel from '../models/transactionModel.js'
 //API Controller function to manage clerk user with our database
 // http://localhost:3000/api/user/webhooks
 
-const clerkWebhooks = async (req, res) => {
+export const clerkWebhooks = async (req, res) => {
 
     //Create a Svix instance with clerk webhook secret
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-
-    console.log(req.body);
 
     //If the svix id, timestamp and signature is correct according to the clerk webhook secret then the process will proceed further
     await whook.verify(JSON.stringify(req.body), {
@@ -20,8 +20,6 @@ const clerkWebhooks = async (req, res) => {
 
     //Checking the type of the event
     const { data, type } = req.body;
-
-    console.log(data, type);
 
     switch (type) {
 
@@ -86,4 +84,59 @@ const clerkWebhooks = async (req, res) => {
 
 }
 
-export {clerkWebhooks};
+//API to get published images
+export const getPublishedImages = async (req, res)=>{
+
+    const publishedImageMessages = await chatModel.aggregate([
+        {$unwind: "$messages"},
+        {
+            $match: {
+                "messages.isImage": true,
+                "messages.isPublished": true
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                imageUrl: "$messages.content",
+                userName: "$userName"
+            }
+        }
+    ]);
+
+    res.json({success: true, images: publishedImageMessages.reverse()});
+
+}
+
+//API to get user credit details
+export const getUserCreditDetails = async (req, res)=>{
+
+    const {userId} = req.body;
+
+    const user = await userModel.findById(userId);
+
+    if(!user){
+        return res.json({success: false, message: "User not found!"});
+    }
+
+    res.json({success: true, credits: user.creditBalance, freeCredits: user.freeCredits});
+
+}
+
+//API to get the last purchased plan details
+export const getLastPurchase = async (req, res)=>{
+
+    const { userId } = req.body;
+
+    const lastPurchase = await transactionModel.findOne(
+            { 
+                userId: userId,
+                isPaid: true
+            },
+            { plan: 1 }, 
+            { sort: { createdAt: -1 } }  // Sort by newest first
+    ).lean();
+
+    res.json({success: true, plan: lastPurchase ? lastPurchase.plan : null});
+
+}

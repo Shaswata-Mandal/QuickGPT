@@ -3,33 +3,130 @@ import { assets, dummyPlans } from '../assets/assets';
 import Loading from './Loading';
 import { useAppContext } from '../context/AppContext';
 import { useClerk } from '@clerk/clerk-react';
+import toast from 'react-hot-toast';
 
 const Credits = () => {
 
-  const {openSignIn} = useClerk();
-  const { lastPurchasedPlan, setLastPurchasedPlan, freeCredits, theme, user, isSignedIn } = useAppContext();
+  const { openSignIn } = useClerk();
+  const { lastPurchasedPlan, freeCredits, user, isSignedIn, getToken, axios, fetchCreditDetails, navigate, setLastPurchasedPlan, plans } = useAppContext();
 
-  const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchPlans = async () => {
+  const fetchLastPurchasedPlanDetail = async () => {
 
-    setPlans(dummyPlans);
-    setLoading(false);
+    setLoading(true);
 
-  };
+    try {
+
+      const token = await getToken();
+
+      const { data } = await axios.get('/api/user/last-purchase', { headers: { Authorization: token } })
+
+      if (data.success) {
+        setLastPurchasedPlan(data.plan);
+      }
+      else {
+        toast.error(data.message);
+      }
+
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+
+  }
 
   useEffect(() => {
-    fetchPlans();
-  }, []);
 
-  const handleSignInClick = () => {
+    if (isSignedIn) {
 
-    if(isSignedIn){
+      fetchLastPurchasedPlanDetail();
 
     }
-    else{
-      openSignIn({});
+
+  }, []);
+
+  const initPay = async (order) => {
+
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: "Credits Payment",
+      description: "Credits Payment",
+      order_id: order.id,
+      plan: order.plan,
+      credits: order.credits,
+      handler: async (response) => {
+
+        const token = await getToken();
+
+        console.log(response)
+
+        //verifying the payment
+        try {
+
+          const { data } = await axios.post('/api/plans/verify-razor', response, { headers: { Authorization: token } });
+
+          if (data.success) {
+            fetchCreditDetails();
+            navigate("/");
+            toast.success("Credits Added");
+          }
+          else {
+            toast.error(data.message);
+          }
+
+        } catch (error) {
+          toast.error(error.message);
+        }
+
+      },
+      theme: {
+        color: "#3399cc",
+      },
+      //If user closes the modal (without paying)
+      modal: {
+        ondismiss: function (response) {
+          toast.error("Payment process was cancelled.");
+        },
+      },
+    }
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+
+  }
+
+  const paymentRazorpay = async (planId) => {
+
+    if (!isSignedIn) {
+      openSignIn();
+      return;
+    }
+
+    if (planId === 'Free') {
+      return;
+    }
+
+    try {
+
+      const token = await getToken();
+
+      //initiating payment data for our database and getting a order data from razorpay
+      const { data } = await axios.post('/api/plans/pay-razor', { planId }, { headers: { Authorization: token } });
+
+      if (data.success) {
+
+        //initiating the razorpay ui for payment, verification and task after successful payment
+        initPay(data.order);
+
+      }
+
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
     }
 
   }
@@ -39,9 +136,9 @@ const Credits = () => {
   }
 
   return (
-    <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-5 pb-5'>
+    <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 py-5'>
 
-      <div className='min-h-[80vh] text-center mb-10'>
+      <div className='min-h-[80vh] text-center mb-5'>
 
         <h2 className='text-3xl font-semibold text-center mb-5  text-gray-800 dark:text-white'>Our Plans</h2>
 
@@ -66,7 +163,7 @@ const Credits = () => {
                 )}
 
                 {/* Most Popular Tag */}
-                {item.popular === true && lastPurchasedPlan === null && (
+                {item.popular === true && lastPurchasedPlan !== item.id && (
                   <div className="absolute -top-3 -right-3 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                     Most Popular
                   </div>
@@ -118,14 +215,14 @@ const Credits = () => {
                       }`}
                     disabled={user && freeCredits <= 0}
                   >
-                    {freeCredits > 0 ? 'Current Plan' : 'Exhausted'}
+                    {freeCredits > 0 ? `Remaining Free Credits: ${freeCredits}` : 'Exhausted'}
                   </button>
 
                 ) : (
 
                   <button
                     className='cursor-pointer w-full bg-gray-800 text-white mt-auto text-sm rounded-md py-2.5 min-w-52'
-                    onClick={() => handleSignInClick()}
+                    onClick={() => paymentRazorpay(item.id)}
                   >
                     Get Started
                   </button>
@@ -136,7 +233,7 @@ const Credits = () => {
 
                 <button
                   className='cursor-pointer w-full bg-gray-800 text-white mt-auto text-sm rounded-md py-2.5 min-w-52'
-                  onClick={() => handleSignInClick()}
+                  onClick={() => paymentRazorpay(item.id)}
                 >
                   {isSignedIn ? 'Purchase' : 'Get Started'}
                 </button>

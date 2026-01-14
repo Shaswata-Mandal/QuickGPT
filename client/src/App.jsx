@@ -1,33 +1,31 @@
 import React, { useState } from 'react'
-import Sidebar from './components/Sidebar'
-import ChatBox from './components/ChatBox'
+import Sidebar from './components/common/Sidebar'
+import ChatBox from './components/chatComponents/ChatBox'
 import { CreditsPage } from './pages/Credits'
 import Community from './pages/Community'
 import { Route, Routes, useLocation } from 'react-router-dom'
-import { assets } from './assets/assets'
 import './assets/prism.css'
 import Loading from './pages/Loading'
-import Login from './pages/Login'
-import LandingPage from './components/LandingPage'
+import LandingPage from './components/loggedOutComponents/LandingPage'
 import { useUser } from '@clerk/clerk-react' // Using Clerk hook directly
+import { Toaster } from 'react-hot-toast'
+import Navbar from './components/common/Navbar'
+import SharedChatDisplayBox from './components/chatComponents/SharedChatDisplayBox'
+import SlideModal from './components/common/SlideModal'
+import { useAppContext } from './context/AppContext'
+import PopOverModal from './components/common/PopOverModal'
 
 const App = () => {
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { pathname } = useLocation();
-
   const { isSignedIn, isLoaded } = useUser() // Get auth state directly from Clerk
-
-  if (pathname === '/loading') {
-    return <Loading />
-  }
+  const { slideModal, closeSlideModal, popOverModal, closePopOverModal } = useAppContext();
 
   // Show loading state while auth is being checked
   if (!isLoaded) {
 
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className='border-4 border-violet-600  rounded-full h-12 w-12 border-t-transparent animate-spin'></div>
+      <div className='flex min-h-screen min-w-screen items-center justify-center'>
+        <Loading />
       </div>
     )
 
@@ -36,47 +34,99 @@ const App = () => {
   return (
     <div>
 
-      {!isMenuOpen && isSignedIn && (
+      <Toaster />
 
-        <div className='fixed w-full top-0 left-0 bg-white dark:bg-gradient-to-b from-[#000000] to-[#242124] md:hidden z-20 px-3 py-2'>
+      <SlideModal isOpen={slideModal.isOpen} onClose={closeSlideModal}>
+        {slideModal.content}
+      </SlideModal>
 
-          <img onClick={() => setIsMenuOpen(true)} src={assets.menu_icon} className='w-8 h-8 cursor-pointer md:hidden not-dark:invert' alt="" />
+      <PopOverModal/>
 
-        </div>
+      <Routes>
 
-      )}
+        {/* ================= PUBLIC SHARED CHAT ================= */}
+        <Route
+          path="/chat/share/:shareId"
+          element={
 
-      {isSignedIn ?
-        (
+            isSignedIn ? (
 
-          <div className='dark:bg-gradient-to-b from-[#242124] to-[#000000] dark:text-white'>
+              // Logged-in users see full app layout
+              <div className="dark:bg-gradient-to-b from-[#242124] to-[#000000] dark:text-white">
 
-            <div className='flex h-screen w-screen'>
+                <div className="flex h-screen w-screen">
 
-              <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+                  <Sidebar />
 
-              <Routes>
+                  <div className="flex flex-col flex-1">
 
-                <Route path='/' element={<ChatBox />} />
-                <Route path='/credits' element={<CreditsPage />} />
-                <Route path='/community' element={<Community />} />
+                    <Navbar />
 
-              </Routes>
+                    <div className='flex-1 flex justify-center overflow-y-scroll'>
+                      <SharedChatDisplayBox />
+                    </div>
 
-            </div>
+                  </div>
 
-          </div>
+                </div>
 
-        )
-        :
-        (
+              </div>
+            ) : (
 
-          <div>
-            <LandingPage />
-          </div>
+              // Logged-out users see shared chat only
+              <div className='flex-1 flex justify-center overflow-y-scroll'>
+                <SharedChatDisplayBox />
+              </div> 
 
-        )
-      }
+            )
+
+          }
+        />
+
+        {/* ================= AUTHENTICATED APP ================= */}
+        {isSignedIn && (
+
+          <Route
+            path="/*"
+            element={
+
+              <div className="dark:bg-gradient-to-b from-[#242124] to-[#000000] dark:text-white">
+
+                <div className="flex h-screen w-screen">
+
+                  <Sidebar />
+
+                  <div className="flex flex-col flex-1">
+
+                    <Navbar />
+
+                    <div className="flex-1 flex justify-center overflow-y-scroll">
+
+                      <Routes>
+                        <Route path="/" element={<ChatBox />} />
+                        <Route path="/credits" element={<CreditsPage />} />
+                        <Route path="/community" element={<Community />} />
+                      </Routes>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            }
+          />
+        )}
+
+        {/* ================= GUEST FALLBACK ================= */}
+        {!isSignedIn && (
+          <Route path="*" element={<LandingPage />} />
+        )}
+
+      </Routes>
+
 
     </div>
   )

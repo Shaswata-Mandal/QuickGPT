@@ -3,7 +3,6 @@ import logo_full from "./logo_full.svg";
 import logo_full_dark from "./logo_full_dark.svg";
 import search_icon from "./search_icon.svg";
 import user_icon from "./user_icon.svg";
-import theme_icon from "./theme_icon.svg";
 import send_icon from "./send_icon.svg";
 import stop_icon from "./stop_icon.svg";
 import mountain_img from "./mountain_img.jpg";
@@ -13,7 +12,6 @@ import bin_icon from "./bin_icon.svg";
 import logout_icon from "./logout_icon.svg";
 import diamond_icon from "./diamond_icon.svg";
 import gallery_icon from "./gallery_icon.svg";
-
 import ai_image1 from "./ai_image1.jpg";
 import ai_image2 from "./ai_image2.jpg";
 import ai_image3 from "./ai_image3.jpg";
@@ -26,13 +24,32 @@ import ai_image9 from "./ai_image9.jpg";
 import ai_image10 from "./ai_image10.jpg";
 import ai_image11 from "./ai_image11.jpg";
 import ai_image12 from "./ai_image12.jpg";
+import light_mode from "./light-mode.png";
+import dark_mode from "./sleep-mode.png";
+import font_icon from "./font.png";
+import image_icon from './image-gallery.png'
+import rename_icon from './rename.png';
+import archive_icon from './archive.png';
+import options_icon from './more.png';
+import check_icon from './check.png';
+import loading_icon from './loading.png'
+import unarchive_icon from './inbox.png';
+import delete_icon from './delete.png';
+import save_icon from './save.png';
+import unarchive_chat_icon from './unarchive.png'
+import archive_all_icon from './archive-all.png'
+import planet_icon from './planet.png'
+import share_icon from './share.png'
+import shared_chats_icon from './shared-chats.png'
+import archived_chats_icon from './archive-chats.png'
+import unshare_chats_icon from './unshare-chats.png'
+import copy_icon from './copy.png'
 
 export const assets = {
     logo,
     logo_full,
     search_icon,
     user_icon,
-    theme_icon,
     send_icon,
     stop_icon,
     mountain_img,
@@ -42,7 +59,27 @@ export const assets = {
     logout_icon,
     logo_full_dark,
     diamond_icon,
-    gallery_icon
+    gallery_icon, 
+    light_mode,
+    dark_mode,
+    font_icon, 
+    image_icon,
+    rename_icon, 
+    options_icon, 
+    archive_icon,
+    check_icon,
+    loading_icon,
+    unarchive_icon,
+    delete_icon,
+    save_icon,
+    unarchive_chat_icon,
+    archive_all_icon,
+    planet_icon,
+    share_icon, 
+    shared_chats_icon, 
+    archived_chats_icon,
+    unshare_chats_icon,
+    copy_icon,
 };
 
 export const dummyUserData = {
