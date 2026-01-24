@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth, useUser } from '@clerk/clerk-react'
 import axios from 'axios'
 import toast from "react-hot-toast";
-import ConfirmDialog from '../components/common/ConfirmDialog';
 
 //Making the backend url as the base url for any axios api call
 axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
@@ -14,9 +13,14 @@ axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
 //archive - done
 // delete all archived chats, archive all chats backend logic - done
 //share chat ui -done, backend logic for shared chat feature - done
-//context saving, summary - done but remove rate limiter and do it based on 429 gemini error
-//ai avatars
-//expert team - career coach, finance advisor, etc
+//context saving, summary - done
+//ai model choose option - done
+//ai avatars - with memories - half done - show the avatar memory in popover modal,  details of avatar in avatars page, show image and header so that user knows to which avatar he is talking 
+//expert team - career coach, finance advisor, etc - pending
+
+//llm-warning toast
+//search box shift it to popover modal - half done - pin chat left
+//don't give the error replies to the summarization and context building. add replyType in chat model to the message
 
 const AppContext = createContext();
 
@@ -26,12 +30,18 @@ export const AppContextProvider = ({ children }) => {
     const { getToken } = useAuth();
 
     const navigate = useNavigate();
+
     const [chats, setChats] = useState([]);
-    const [selectedChat, setSelectedChat] = useState(null);
+    const [selectedChatId, setSelectedChatId] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [messagesChatId, setMessagesChatId] = useState(null);
+    const [selectedModel, setSelectedModel] = useState("groq");
+    const [responseLoading, setResponseLoading] = useState(false);
+    const [userChatsLoading, setUserChatsLoading] = useState(false);
+    const [messagesLoading, setMessagesLoading] = useState(false);
+
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [userChatsLoading, setUserChatsLoading] = useState(false);
-    const [messages, setMessages] = useState([]);
 
     const [slideModal, setSlideModal] = useState({
         isOpen: false,
@@ -39,15 +49,95 @@ export const AppContextProvider = ({ children }) => {
         title: "",
         titleFeature: null,
     });
-
     const [popOverStack, setPopOverStack] = useState([]);
     const [popOverClosingIndex, setPopOverClosingIndex] = useState(null);
+
 
     const [credits, setCredits] = useState(false);
     const [freeCredits, setFreeCredits] = useState(null);
     const [lastPurchasedPlan, setLastPurchasedPlan] = useState(null);
     const [isCreditsLoading, setIsCreditsLoading] = useState(false);
     const [plans, setPlans] = useState([]);
+
+    const [availableAvatars, setAvailableAvatars] = useState(null);
+    const [avatarsLoading, setAvatarsLoading] = useState(false);
+
+    const [llmWarning, setLlmWarning] = useState(null);
+    const [cooldownInfo, setCooldownInfo] = useState(JSON.parse(localStorage.getItem("llmCooldownInfo")) || {});
+
+    //-----------------------------------------------------------------------------------------------------------
+
+    const getRemaningCooldown = (provider) => {
+
+        const data = cooldownInfo[provider];
+
+        if (!data) return null;
+
+        const elapsed = Math.floor((Date.now() - data.startedAt) / 1000);
+        const remaining = data.retryAfter - elapsed;
+
+        return remaining > 0 ? remaining : null;
+
+    };
+
+    //-----------------------------------------------------------------------------------------------------------
+
+    const fetchAvatarDetails = async () => {
+
+        setAvatarsLoading(true);
+
+        try {
+
+            const token = await getToken();
+
+            const { data } = await axios.get("/api/avatars/get", { headers: { Authorization: token } });
+
+            if (data.success) {
+                setAvailableAvatars(data.availableAvatars);
+            }
+
+        } catch (error) {
+            toast.error(error.response?.data?.message);
+        } finally {
+            setAvatarsLoading(false);
+        }
+
+    }
+
+    //-----------------------------------------------------------------------------------------------------------
+
+    const fetchChatMessages = async (chatId) => {
+
+        setMessagesLoading(true);
+
+        try {
+
+            const token = await getToken();
+
+            const { data } = await axios.get(`/api/chat/get-chat-messages?chatId=${chatId}`, { headers: { Authorization: token } });
+
+            if (data.success) {
+                setMessages(data.chatMessages);
+                setMessagesChatId(chatId);
+            }
+            else {
+                navigate("/")
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+
+            navigate("/");
+            // console.log(error);
+            toast.error(error.response?.data?.message);
+
+        } finally {
+            setMessagesLoading(false);
+        }
+
+    }
+
+    //-----------------------------------------------------------------------------------------------------------
 
     const openSlideModal = ({ content, title }) => {
         setSlideModal({ isOpen: true, content, title, titleFeature: null });
@@ -57,11 +147,11 @@ export const AppContextProvider = ({ children }) => {
         setSlideModal({ isOpen: false, content: null, title: "", titleFeature: null });
     };
 
-    const openPopOverModal = ({ content, title }) => {
+    const openPopOverModal = ({ content, title, size = "md" }) => {
 
         setPopOverStack(prev => [
             ...prev,
-            { id: crypto.randomUUID(), content, title }
+            { id: crypto.randomUUID(), content, title, size }
         ]);
 
     }
@@ -96,30 +186,7 @@ export const AppContextProvider = ({ children }) => {
 
     };
 
-    const customConfirm = ({ title = "Confirm", message }) => {
-
-        return new Promise((resolve) => {
-
-            openPopOverModal({
-                title,
-                content: (
-                    <ConfirmDialog
-                        message={message}
-                        onConfirm={() => {
-                            resolve(true);
-                            closeTopPopOverModal();
-                        }}
-                        onCancel={() => {
-                            resolve(false);
-                            closeTopPopOverModal();
-                        }}
-                    />
-                ),
-            });
-
-        });
-
-    }
+    //-----------------------------------------------------------------------------------------------------------
 
     const fetchPlans = async () => {
 
@@ -143,14 +210,6 @@ export const AppContextProvider = ({ children }) => {
         }
 
     };
-
-    useEffect(() => {
-
-        if (isSignedIn) {
-            fetchPlans();
-        }
-
-    }, [isSignedIn]);
 
     const fetchCreditDetails = async () => {
 
@@ -182,13 +241,8 @@ export const AppContextProvider = ({ children }) => {
 
     }
 
-    useEffect(() => {
-
-        fetchCreditDetails();
-
-    }, [user, isSignedIn]);
-
-    const createNewChat = async () => {
+    //Function to create a new chat
+    const createNewChat = async (chatMode, avatarId) => {
 
         try {
 
@@ -198,47 +252,29 @@ export const AppContextProvider = ({ children }) => {
                 return toast("Login to create a new chat");
             }
 
-            const { data } = await axios.post('/api/chat/create', {}, {
+            const { data } = await axios.post('/api/chat/create', { chatMode, avatarId }, {
                 headers: { Authorization: token }
             });
 
             if (data.success && data.chat) {
 
+                setMessagesChatId(data.chat._id);
                 setChats(prev => [data.chat, ...prev]);
-                setSelectedChat(data.chat);
-                navigate(`/`);
+                navigate(`/chat/${data.chat._id}`);
                 return data.chat;
 
             } else {
 
-                toast.error(data.message);
                 return null;
 
             }
 
         } catch (error) {
             toast.error(error.message);
+            return null;
         }
 
     }
-
-    const updateChatMessages = (chatId, newMessages) => {
-
-        setChats(prevChats =>
-            prevChats.map(chat =>
-                chat._id === chatId
-                    ? { ...chat, messages: newMessages }
-                    : chat
-            )
-        );
-
-        setSelectedChat(prev =>
-            prev && prev._id === chatId
-                ? { ...prev, messages: newMessages }
-                : prev
-        );
-
-    };
 
     const updateChatName = (chatId, chatName) => {
 
@@ -250,14 +286,9 @@ export const AppContextProvider = ({ children }) => {
             )
         );
 
-        setSelectedChat(prev =>
-            prev && prev._id === chatId
-                ? { ...prev, name: chatName }
-                : prev
-        );
-
     }
 
+    //Function to fetch all the user chats
     const fetchUserChats = async () => {
 
         setUserChatsLoading(true);
@@ -275,7 +306,6 @@ export const AppContextProvider = ({ children }) => {
             if (data.success) {
 
                 setChats(data.chats);
-                setSelectedChat(null);
 
             }
             else {
@@ -290,6 +320,21 @@ export const AppContextProvider = ({ children }) => {
 
     }
 
+    //-----------------------------------------------------------------------------------------------------------
+
+    //Fetching plans, credit details, user chats and available avatars on user sign in
+    useEffect(() => {
+
+        if (isSignedIn && user) {
+            fetchPlans();
+            fetchCreditDetails();
+            fetchUserChats();
+            fetchAvatarDetails();
+        }
+
+    }, [isSignedIn, user]);
+
+    //Theme change logic
     useEffect(() => {
 
         if (theme === 'dark') {
@@ -303,36 +348,67 @@ export const AppContextProvider = ({ children }) => {
 
     }, [theme]);
 
+    //Storing the cooldown info in local storage on its change
     useEffect(() => {
 
-        if (user) {
-            fetchUserChats();
-        }
-        else {
-            setChats([]);
-            setSelectedChat(null);
-        }
+        localStorage.setItem("llmCooldownInfo", JSON.stringify(cooldownInfo));
 
-    }, [user]);
+    }, [cooldownInfo]);
+
+    useEffect(() => {
+
+        const interval = setInterval(() => {
+
+            setCooldownInfo(prev => {
+
+                const updated = { ...prev };
+                let changed = false;
+
+                for (const provider in updated) {
+                    const elapsed =
+                        (Date.now() - updated[provider].startedAt) / 1000;
+
+                    if (elapsed >= updated[provider].retryAfter) {
+                        delete updated[provider];
+                        changed = true;
+                    }
+                }
+
+                return changed ? updated : prev;
+
+            });
+
+        }, 1000);
+
+        return () => clearInterval(interval);
+
+    }, []);
+
+    useEffect(() => {
+        console.log(cooldownInfo);
+    }, [cooldownInfo]);
 
     const value = {
 
-        navigate, axios, customConfirm,
+        navigate, axios,
         user, isSignedIn,
-        chats, setChats, selectedChat, setSelectedChat,
+        chats, setChats, selectedChatId, setSelectedChatId,
         theme, setTheme,
         credits, setCredits,
         freeCredits, setFreeCredits,
         lastPurchasedPlan, setLastPurchasedPlan,
-        createNewChat, fetchUserChats, getToken, updateChatMessages, updateChatName,
+        createNewChat, fetchUserChats, getToken, updateChatName,
         fetchCreditDetails,
         isCreditsLoading, setIsCreditsLoading,
         isMenuOpen, setIsMenuOpen,
         plans, fetchPlans,
         userChatsLoading, setUserChatsLoading,
-        messages, setMessages,
         slideModal, setSlideModal, closeSlideModal, openSlideModal,
         popOverStack, setPopOverStack, closeTopPopOverModal, openPopOverModal, closePopOverModalAt, popOverClosingIndex, setPopOverClosingIndex,
+        fetchChatMessages, messages, setMessages, messagesLoading, setMessagesLoading, responseLoading, setResponseLoading,
+        selectedModel, setSelectedModel, messagesChatId, setMessagesChatId,
+        availableAvatars, setAvailableAvatars, avatarsLoading, setAvatarsLoading, fetchAvatarDetails,
+        llmWarning, setLlmWarning, cooldownInfo, setCooldownInfo, getRemaningCooldown,
 
     }
 
@@ -344,4 +420,10 @@ export const AppContextProvider = ({ children }) => {
 
 }
 
-export const useAppContext = () => useContext(AppContext);
+export const useAppContext = () => {
+
+    const ctx = useContext(AppContext);
+
+    return ctx ?? {};
+
+};

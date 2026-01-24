@@ -31,6 +31,32 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 1,
     },
+    avatarMemoryEnabled: {
+        type: Boolean, 
+        default: false,
+    }, 
+    personalizationMemoryEnabled: {
+        type: Boolean, 
+        default: false,
+    }, 
+    personalization: {
+        baseStyle: {
+            type: String, 
+            default: "default"
+        }, 
+        tone: {
+            warm: { type: String, default: "default" }, 
+            enthusiastic: { type: String, default: "default" },
+        },
+        formatting: {
+            headerLists: { type: String, default: "default" }, 
+            emoji: { type: String, default: "default" }, 
+        }, 
+        customInstruction: { type: String, default: "" },
+        nickname: { type: String, default: "" }, 
+        occupation: { type: String, default: "" }, 
+        moreAboutYou: { type: String, default: "" },
+    },
 
 });
 

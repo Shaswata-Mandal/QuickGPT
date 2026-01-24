@@ -6,12 +6,14 @@ import { useClerk, UserButton } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import ChatOptions from '../chatComponents/ChatOptions';
 import CustomUserMenu from './CustomUserMenu';
+import ChatSearchBox from '../chatComponents/ChatSearchBox';
+import { useConfirm } from '../../hooks/useConfirm';
 
 const Sidebar = () => {
 
   const { signOut } = useClerk();
-  const { selectedChat, chats, setSelectedChat, theme, user, navigate, getToken, axios, isMenuOpen, setIsMenuOpen, updateChatName, userChatsLoading, setUserChatsLoading, fetchUserChats, customConfirm } = useAppContext();
-  const [search, setSearch] = useState('');
+  const customConfirm = useConfirm();
+  const { openPopOverModal, selectedChatId, chats, theme, user, navigate, getToken, axios, isMenuOpen, setIsMenuOpen, updateChatName, userChatsLoading, setUserChatsLoading, fetchUserChats, setSelectedChatId, setMessagesChatId } = useAppContext();
   const [activeChatOptions, setActiveChatOptions] = useState(null);
   const [renamedChatName, setRenamedChatName] = useState(null);
   const [renameChatId, setRenameChatId] = useState(null);
@@ -50,8 +52,7 @@ const Sidebar = () => {
 
   const handleChatClick = (chat) => {
 
-    navigate('/');
-    setSelectedChat(chat);
+    navigate(`/chat/${chat._id}`);
     handleCloseSidebar();
 
   }
@@ -83,6 +84,7 @@ const Sidebar = () => {
       if (data.success) {
 
         await fetchUserChats();
+        navigate("/");
 
       }
       else {
@@ -130,6 +132,7 @@ const Sidebar = () => {
       if (data.success) {
 
         await fetchUserChats();
+        navigate("/");
 
       }
       else {
@@ -199,7 +202,7 @@ const Sidebar = () => {
         />
       )}
 
-      <div className={`flex flex-col h-screen min-w-72 p-5 dark:bg-gradient-to-b from-[#242124] to-[#000000]/30 
+      <div className={`flex flex-col h-screen min-w-72 max-w-72 p-5 dark:bg-gradient-to-b from-[#242124] to-[#000000]/30 
         border-r border-[#80609F]/30 backdrop-blur-3xl transition-all duration-500 overflow-y-scroll bg-white dark:bg-transparent
         max-md:fixed max-md:top-0 max-md:left-0 max-md:h-full max-md:z-50 ${!isMenuOpen && 'max-md:-translate-x-full'}`}
       >
@@ -207,22 +210,44 @@ const Sidebar = () => {
         <img className='w-full max-w-48' src={theme === 'dark' ? assets.logo_full : assets.logo_full_dark} alt="" />
 
         {/* New Chat Button */}
-        <button onClick={() => { navigate('/'); setSelectedChat(null); handleCloseSidebar(); }} className='flex justify-center items-center w-full py-2 mt-6 text-white bg-gradient-to-r from-[#A456f7] to-[#3d81f6] text-sm rounded-md cursor-pointer'>
+        <button onClick={() => { navigate('/'); handleCloseSidebar(); }} className='flex justify-center items-center w-full py-2 mt-5 text-white bg-gradient-to-r from-[#A456f7] to-[#3d81f6] text-sm rounded-md cursor-pointer'>
 
           <span className='mr-2 text-xl'>+</span> New Chat
 
         </button>
 
         {/* Search Conversations */}
-        <div className='flex items-center gap-2 p-3 mt-4 border border-gray-400 dark:border-white/20 rounded-md'>
+        <div
+          onClick={() => {
+            openPopOverModal({
+              title: "Search Conversations",
+              size: "xl",
+              content: (
+                <ChatSearchBox />
+              )
+            });
+            setIsMenuOpen(false);
+          }}
+          className='flex items-center mt-2 hover:bg-gray-200 dark:hover:bg-primary/20 cursor-pointer gap-2 px-3 py-2 rounded-md'
+        >
 
           <img src={assets.search_icon} className='w-4 not-dark:invert' alt="" />
-          <input onChange={(e) => setSearch(e.target.value)} value={search} placeholder='Search Conversations' className='text-xs placeholder:text-gray-400 outline-none' type="text" />
+          <p className='text-sm'>
+            Search Conversations
+          </p>
+
+        </div>
+
+        {/* Avatars page button */}
+        <div onClick={() => { navigate("/avatars"); setSelectedChatId(null); setMessagesChatId(null); handleCloseSidebar(); }} className='flex items-center hover:bg-gray-200 dark:hover:bg-primary/20 cursor-pointer gap-2 px-3 py-2 rounded-md'>
+
+          <img src={assets.avatars_icon} className='w-5 h-5 dark:invert' alt="" />
+          <span className='text-sm'>Explore Avatars</span>
 
         </div>
 
         {/* Recent Chats */}
-        <div className='mt-4 flex justify-between items-center'>
+        <div className='mt-2 flex justify-between items-center'>
 
           <p className='text-sm'>Recent Chats</p>
 
@@ -260,15 +285,16 @@ const Sidebar = () => {
           )
           :
           (
-            <div className='flex-1 overflow-y-scroll mt-3 text-sm space-y-3 min-h-50 md:min-h-40'>
+            <div className='flex-1 overflow-y-scroll mt-3 pb-10 text-sm space-y-3 min-h-50 md:min-h-40'>
 
               {
                 chats.length > 0 ?
                   (
-                    chats.filter((chat) => chat.messages[0] ? chat.messages[0]?.content.toLowerCase().includes(search.toLowerCase()) : chat.name.toLowerCase().includes(search.toLowerCase())).map((chat) => (
+                    chats?.map((chat) => (
 
-                      <div onClick={() => handleChatClick(chat)} key={chat._id} className={`relative py-2 pl-4 pr-1 dark:bg-[#57317c]/10 border ${chat._id === selectedChat?._id ? "border-black dark:border-white" : "border-gray-300 dark:border-[#80609f]/15"} rounded-md cursor-pointer flex justify-between items-center group min-w-0`}>
+                      <div onClick={() => handleChatClick(chat)} key={chat._id} className={`relative py-2 pl-3 pr-1 dark:bg-[#57317c]/10 border ${chat._id === selectedChatId ? "border-black dark:border-white" : "border-gray-300 dark:border-[#80609f]/15"} rounded-md cursor-pointer flex justify-between items-center group min-w-0`}>
 
+                        {/* Chat renaming input box and name box */}
                         <div>
 
                           {
@@ -311,12 +337,12 @@ const Sidebar = () => {
                               :
                               (
                                 <p className='truncate w-full'>
-                                  {chat.name?.slice(0, 32) ?? "New Chat"}
+                                  {chat.name ? (chat.name?.length < 26 ? chat.name : `${chat.name?.slice(0, 26)}...`) : "New Chat"}
                                 </p>
                               )
                           }
 
-                          <p>{moment(chat.updatedAt).fromNow()}</p>
+                          <p className='text-xs'>{moment(chat.updatedAt).fromNow()}</p>
 
                         </div>
 
@@ -351,7 +377,7 @@ const Sidebar = () => {
         }
 
         {/* User Account */}
-        <div className='fixed bottom-0 left-0 w-full flex items-center gap-2 px-3 py-2 mt-4 border-t border-gray-300 dark:border-white/15  cursor-pointer group'>
+        <div className='fixed bottom-0 left-0 w-full flex items-center gap-2 px-3 py-2 mt-4 border-t border-gray-300 dark:border-white/15  cursor-pointer group bg-white dark:bg-black z-55'>
 
           <CustomUserMenu />
           <p className='flex-1 text-sm cursor-default dark:text-primary truncate'>Hi, {user?.firstName}</p>

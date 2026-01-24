@@ -44,42 +44,33 @@ import shared_chats_icon from './shared-chats.png'
 import archived_chats_icon from './archive-chats.png'
 import unshare_chats_icon from './unshare-chats.png'
 import copy_icon from './copy.png'
+import model_preference_icon from './model-preference.png'
+import gemini from './gemini.png';
+import groq from './groq.png'
+import auto from './auto.png'
+import chanakya from './chanakya.jpg'
+import gautama_buddha from './gautama-buddha.jpg'
+import mahatma_gandhi from './mahatma-gandhi.jpg'
+import rabindranath_tagore from './rabindranath-tagore.jpg'
+import swami_vivekananda from './swami-vivekananda.jpg'
+import avatars_icon from './avatars.png'
+import sort_icon from './sort.png'
+import new_chat_icon from './new-chat.png'
+import chat_icon from './chat.png'
+import new_tab_icon from './new-tab.png'
+import down_arrow_icon from './down-arrow.png'
+import pin_icon from './pin.png'
+import settings_icon from './settings.png'
 
 export const assets = {
-    logo,
-    logo_full,
-    search_icon,
-    user_icon,
-    send_icon,
-    stop_icon,
-    mountain_img,
-    menu_icon,
-    close_icon,
-    bin_icon,
-    logout_icon,
-    logo_full_dark,
-    diamond_icon,
-    gallery_icon, 
-    light_mode,
-    dark_mode,
-    font_icon, 
-    image_icon,
-    rename_icon, 
-    options_icon, 
-    archive_icon,
-    check_icon,
-    loading_icon,
-    unarchive_icon,
-    delete_icon,
-    save_icon,
-    unarchive_chat_icon,
-    archive_all_icon,
-    planet_icon,
-    share_icon, 
-    shared_chats_icon, 
-    archived_chats_icon,
-    unshare_chats_icon,
-    copy_icon,
+    logo, logo_full, search_icon, user_icon, send_icon, stop_icon, mountain_img, menu_icon,
+    close_icon, bin_icon, logout_icon, logo_full_dark, diamond_icon, gallery_icon, light_mode,
+    dark_mode, font_icon, image_icon, rename_icon, options_icon, archive_icon, check_icon,
+    loading_icon, unarchive_icon, delete_icon, save_icon, unarchive_chat_icon, archive_all_icon,
+    planet_icon, share_icon, shared_chats_icon, archived_chats_icon, unshare_chats_icon, copy_icon,
+    model_preference_icon, gemini, auto, groq, sort_icon, new_chat_icon, chat_icon, new_tab_icon,
+    avatars_icon, chanakya, gautama_buddha, mahatma_gandhi, swami_vivekananda, rabindranath_tagore,
+    down_arrow_icon, pin_icon, settings_icon,
 };
 
 export const dummyUserData = {
@@ -88,6 +79,68 @@ export const dummyUserData = {
     "email": "admin@example.com",
     "password": "$2b$10$VESVdPDjL5LF.KCU6jKyqeXNSLASAAfpR2kkIJExtMO.PJvZJAudy",
     "credits": 200,
+}
+
+export const AVAILABLE_MODELS = [
+    {
+        id: "groq",
+        name: "Groq",
+        icon: groq,
+        tagline: "Ultra-fast responses",
+        description:
+            "Optimized for extremely fast replies and low-latency conversations.",
+        features: [
+            "Very fast inference speed",
+            "Great for real-time chat",
+            "Ideal for coding & quick Q&A",
+            "Smooth conversational flow",
+        ],
+        rateLimit: "Optimized for frequent short requests",
+        bestFor: "Fast chats, coding help, rapid interactions",
+        recommended: true,
+    },
+    {
+        id: "gemini",
+        name: "Gemini",
+        icon: gemini,
+        tagline: "Powerful reasoning & long context",
+        description:
+            "Excels at deep reasoning, long conversations, and structured responses.",
+        features: [
+            "Handles long prompts and conversations",
+            "Strong reasoning and summarization",
+            "Better context retention",
+            "Detailed and thoughtful responses",
+        ],
+        rateLimit: "Designed for thoughtful, longer requests",
+        bestFor: "Analysis, summaries, complex problem solving",
+        recommended: false,
+    },
+    {
+        id: "auto",
+        name: "Auto",
+        icon: auto,
+        tagline: "Smart model selection",
+        description:
+            "Automatically selects the best available model based on speed, quality, and rate limits.",
+        features: [
+            "Automatically switches between models",
+            "Avoids rate-limit failures",
+            "Balanced speed and response quality",
+            "Most reliable option",
+        ],
+        rateLimit: "Best overall availability",
+        bestFor: "Recommended for most users and general use",
+        recommended: false,
+    }
+];
+
+export const AVATAR_IMAGES = {
+    "gautama-buddha": gautama_buddha,
+    "gandhi": mahatma_gandhi,
+    "chanakya": chanakya,
+    "swami-vivekananda": swami_vivekananda,
+    "rabindranath-tagore": rabindranath_tagore,
 }
 
 // copy for server controllers
@@ -104,7 +157,7 @@ export const dummyPlans = [
             'Standard response speed',
             'Community support',
             'Access to GPT-3.5 model'
-        ], 
+        ],
         popular: false,
         cta: "Get Started",
     },
@@ -121,7 +174,7 @@ export const dummyPlans = [
             'Email support',
             'Access to GPT-4 model',
             'Basic customization options'
-        ], 
+        ],
         popular: false,
         cta: "Purchase",
     },
@@ -140,7 +193,7 @@ export const dummyPlans = [
             'Advanced customization',
             'API access',
             'Custom instructions'
-        ], 
+        ],
         popular: true,
         cta: "Purchase",
     },
@@ -159,7 +212,7 @@ export const dummyPlans = [
             'Dedicated support channel',
             'Custom model fine-tuning',
             'Bulk operations'
-        ], 
+        ],
         popular: false,
         cta: "Purchase",
     },
@@ -179,7 +232,7 @@ export const dummyPlans = [
             'Custom model training',
             '24/7 phone support',
             'Usage analytics dashboard'
-        ], 
+        ],
         popular: false,
         cta: "Purchase",
     }

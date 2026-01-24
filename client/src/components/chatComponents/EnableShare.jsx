@@ -2,17 +2,19 @@ import React, { useEffect, useState } from 'react'
 import { assets } from '../../assets/assets'
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../../hooks/useConfirm';
 
-const EnableShare = ({ chatId, onShareChange }) => {
+const EnableShare = ({ chatId, onShareChange, title, index, isTop }) => {
 
-    const { axios, getToken, customConfirm } = useAppContext();
+    const customConfirm = useConfirm();
+    const { axios, getToken } = useAppContext();
 
     const [sharingLink, setSharingLink] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
 
     const fetchSharingLink = async (chatId) => {
 
-        if(isProcessing) {
+        if (isProcessing) {
             toast.error("Please wait, an action is already in progress.");
             return;
         }
@@ -20,18 +22,18 @@ const EnableShare = ({ chatId, onShareChange }) => {
         setIsProcessing(true);
 
         try {
-            
+
             const token = await getToken();
 
-            const {data} = await axios.get(
-                "/api/chat/get-share-status-and-link", 
+            const { data } = await axios.get(
+                "/api/chat/get-share-status-and-link",
                 {
-                    params: {chatId},
-                    headers: {Authorization: token}
+                    params: { chatId },
+                    headers: { Authorization: token }
                 }
             );
 
-            if(data.success) {
+            if (data.success) {
                 setSharingLink(data.shareLink);
             }
 
@@ -46,12 +48,12 @@ const EnableShare = ({ chatId, onShareChange }) => {
 
     const handleGenerateRevokeButtonClick = async (chatId, action) => {
 
-        if(isProcessing) {
+        if (isProcessing) {
             toast.error("Please wait, an action is already in progress.");
             return;
         }
 
-        if(action === "revoke") {
+        if (action === "revoke") {
             const confirmed = await customConfirm({ title: "Confirm action", message: "Are you sure you want to revoke the shared link?" });
             if (!confirmed) return;
         }
@@ -72,11 +74,11 @@ const EnableShare = ({ chatId, onShareChange }) => {
 
                 setSharingLink(action === "generate" ? data.shareLink : "");
 
-                if(onShareChange) {
+                if (onShareChange) {
                     await onShareChange();
                 }
-                
-                if(action === "revoke") {
+
+                if (action === "revoke") {
                     toast.success("Link revoked successfully.")
                 }
 
@@ -109,14 +111,14 @@ const EnableShare = ({ chatId, onShareChange }) => {
 
     useEffect(() => {
 
-        if(chatId) {
+        if (chatId) {
             fetchSharingLink(chatId);
         }
 
     }, []);
 
     return (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 w-full p-5">
 
             <div className="relative flex border rounded-md py-2 px-2 dark:border-white">
 

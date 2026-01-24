@@ -6,12 +6,12 @@ import { deductCredits } from '../utils/deductCredits.js';
 //API Controller for creating a new chat
 export const createChat = async (req, res) => {
 
-    const userId = req.body.userId;
+    const { userId, chatMode, avatarId } = req.body;
 
-    if (!userId) {
-        return res.status(401).json({
+    if (!userId || !chatMode) {
+        return res.json({
             success: false,
-            message: "User not authenticated"
+            message: "Missing required details"
         });
     }
 
@@ -29,13 +29,15 @@ export const createChat = async (req, res) => {
         userName: user.firstName,
         name: "New Chat",
         messages: [],
+        chatMode, 
+        avatarId: avatarId ? avatarId : null
     }
 
     // Create and save the chat
     const newChat = await chatModel.create(chatData);
 
     // Populate if needed
-    const createdChat = await chatModel.findById(newChat._id);
+    const createdChat = await chatModel.findById(newChat._id).select("name _id updatedAt chatMode");
 
     res.status(201).json({
         success: true,
@@ -49,9 +51,35 @@ export const getChats = async (req, res) => {
 
     const userId = req.body.userId;
 
-    const chats = await chatModel.find({ userId, isArchived: false }).sort({ updatedAt: -1 });
+    const chats = await chatModel.find({ userId, isArchived: false }).sort({ updatedAt: -1 }).select("name _id updatedAt chatMode");
 
     res.json({ success: true, chats });
+
+}
+
+//API Controller for getting the messages of a particular chat
+export const getChatMessages = async (req, res) => {
+
+    const { chatId } = req.query;
+    const userId = req.body.userId;
+
+    if (!chatId) {
+      return res.status(400).json({
+        success: false,
+        message: "chatId is required",
+      });
+    }
+
+    const chat = await chatModel.findOne({ _id: chatId, userId });
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: `Unable to load conversation ${chatId}`,
+      });
+    }
+
+    res.json({ success: true, chatMessages: chat.messages });
 
 }
 
@@ -74,7 +102,7 @@ export const deleteChat = async (req, res) => {
     }
     else {
 
-        const result = await chatModel.deleteMany({ userId });
+        const result = await chatModel.deleteMany({ userId, isArchived: false });
 
         res.json({ success: true, message: `${result.deletedCount} chats deleted successfully!` });
 
@@ -277,9 +305,13 @@ export const enableDisableChatSharing = async (req, res) => {
                     return res.status(404).json({ success: false, message: "Chat not found!" });
                 }
 
-                chat.isPublic = false;
-                chat.shareId = null;
-                await chat.save();
+                await chatModel.updateOne(
+                    { _id: chatId }, 
+                    {
+                        $set: { isPublic: false },
+                        $unset: { shareId: "" }
+                    }
+                );
 
                 return res.json({ success: true, message: "Chat sharing disabled successfully!" });
 
@@ -288,7 +320,7 @@ export const enableDisableChatSharing = async (req, res) => {
                 //Un-sharing all the chats
                 const result = await chatModel.updateMany(
                     { userId, isPublic: true },
-                    { $set: { isPublic: false, shareId: null } }
+                    { $set: { isPublic: false }, $unset: { shareId: "" } }
                 );
 
                 return res.json({
@@ -386,8 +418,11 @@ export const saveSharedChat = async (req, res) => {
         return res.status(404).json({ success: false, message: "Shared chat not found!" });
     }
 
+    console.log(originalChat.userId);
+    console.log(req.body.userId);
+
     //Prevent saving your own chat
-    if (originalChat.userId === req.body.userId) {
+    if (originalChat.userId.toString() === req.body.userId.toString()) {
         return res.status(400).json({ success: false, message: "You already own this chat!" });
     }
 
@@ -398,7 +433,7 @@ export const saveSharedChat = async (req, res) => {
     });
 
     if (existingCopy) {
-        return res.json({ success: false, message: "Chat already saved!", chatId });
+        return res.json({ success: false, message: "Chat already saved!", chatId: existingCopy._id });
     }
 
     //Clonning the chat

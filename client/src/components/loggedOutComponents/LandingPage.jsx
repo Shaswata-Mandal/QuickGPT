@@ -2,12 +2,30 @@ import React, { useState } from 'react'
 import { testimonials, assets } from '../../assets/assets.js'
 import { useClerk } from '@clerk/clerk-react'
 import LoggedOutNavbar from './LoggedOutNavbar.jsx';
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useAppContext } from '../../context/AppContext.jsx';
+import { useRef } from 'react';
+import toast from 'react-hot-toast';
 
 //Disclaimer: This component was generated using AI and integrated within this project.
 
 const LandingPage = () => {
 
+    const { isSignedIn, navigate } = useAppContext();
     const { openSignIn } = useClerk();
+    const location = useLocation();
+    const shownToastRef = useRef(false);
+    
+    useEffect(() => {
+
+        if(!isSignedIn && location.pathname !== "/" && !shownToastRef.current && !location.pathname.includes("/share")) {
+            toast.error("Login to use the app");
+            shownToastRef.current = true;
+            navigate("/");
+        }
+
+    }, [location.pathname]);
 
     const handleSignInClick = ()=>{
 

@@ -4,10 +4,12 @@ import { UserButton } from '@clerk/clerk-react';
 import ArchivedChatsDisplay, { UnarchiveAllChats } from '../chatComponents/ArchivedChatsDisplay';
 import SharedChatsDisplay from '../chatComponents/SharedChatsDisplay';
 import { assets } from '../../assets/assets';
+import AiModelOptions from '../common/AiModelOptions';
+import Settings from '../settingsComponents/Settings';
 
 const CustomUserMenu = () => {
 
-    const { openSlideModal } = useAppContext();
+    const { openSlideModal, openPopOverModal } = useAppContext();
 
     return (
 
@@ -48,6 +50,45 @@ const CustomUserMenu = () => {
                         openSlideModal({
                             title: "Shared Chats",
                             content: <SharedChatsDisplay />,
+                        });
+                    }}
+                />
+
+                {/* AI Model preference */}
+                <UserButton.Action
+                    label='Model Preference'
+                    labelIcon={
+                        <img
+                            src={assets.model_preference_icon}
+                            className='w-4 h-4'
+                            alt=''
+                        />
+                    }
+                    onClick={() => {
+                        openSlideModal({
+                            title: "Model Preference",
+                            content: <AiModelOptions />,
+                        });
+                    }}
+                />
+
+                {/* Settings */}
+                <UserButton.Action
+                    label='Settings'
+                    labelIcon={
+                        <img
+                            src={assets.settings_icon}
+                            className='w-4 h-4'
+                            alt=''
+                        />
+                    }
+                    onClick={() => {
+                        openPopOverModal({
+                            title: "Settings", 
+                            size: "xxl", 
+                            content: (
+                                <Settings/>
+                            )
                         });
                     }}
                 />

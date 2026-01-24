@@ -1,3 +1,5 @@
+//Rate limiter feature was integrated in this project using AI.
+
 import redis from "../configs/redis.js";
 import { LLM_LIMITS } from "../configs/llmRateLimits.js";
 

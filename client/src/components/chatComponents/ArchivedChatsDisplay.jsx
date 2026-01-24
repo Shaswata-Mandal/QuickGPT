@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 import moment from 'moment';
 import NothingHere from '../common/NothingHere';
+import { useConfirm } from '../../hooks/useConfirm' 
 
 //Title feature buttons component
 export const UnarchiveAllChats = ({ onDeleteAllArchiveChatsClick, onArchiveAllChatsClick, loading }) => {
@@ -36,7 +37,8 @@ export const UnarchiveAllChats = ({ onDeleteAllArchiveChatsClick, onArchiveAllCh
 
 const ArchivedChatsDisplay = () => {
 
-    const { axios, getToken, fetchUserChats, setChats, setSelectedChat, navigate, setSlideModal, customConfirm } = useAppContext();
+    const customConfirm = useConfirm();
+    const { axios, getToken, fetchUserChats, setChats, navigate, setSlideModal } = useAppContext();
     const [loading, setLoading] = useState(false);
     const [archivedChats, setArchivedChats] = useState([]);
     const [processing, setProcessing] = useState(false);
@@ -116,6 +118,7 @@ const ArchivedChatsDisplay = () => {
             if (data.success) {
 
                 await fetchArchivedChats();
+                navigate("/");
                 toast.success(data?.message || "All archived chats deleted successfully!");
 
             } else {
@@ -221,7 +224,6 @@ const ArchivedChatsDisplay = () => {
                 setChats(prev => prev.filter(chat => chat._id !== chatId));
                 await fetchArchivedChats();
                 await fetchUserChats();
-                setSelectedChat(null);
                 navigate('/');
 
                 toast.success(data.message);
@@ -285,7 +287,7 @@ const ArchivedChatsDisplay = () => {
     return (
         <div className='flex flex-col gap-3 w-full'>
 
-            {archivedChats.length > 0 && <p className='text-xs text-center px-2 py-1 bg-gray-200 border border-gray-300 rounded-md'>Showing {archivedChats.length} archived chats</p>}
+            {archivedChats.length > 0 && <p className='text-xs text-center px-2 py-2 bg-gray-200 border border-gray-300 rounded-md'>Showing {archivedChats.length} archived chats</p>}
 
             {archivedChats.length === 0 ?
                 (
@@ -300,11 +302,11 @@ const ArchivedChatsDisplay = () => {
 
                                 <div key={index} className={`relative py-2 px-4 dark:bg-[#57317c]/10 border border-gray-300 dark:border-[#80609f]/15 rounded-md cursor-pointer flex justify-between items-center group`}>
 
-                                    <div>
+                                    <div className='dark:invert'>
 
 
                                         <p className='truncate w-full'>
-                                            {chat.name?.slice(0, 32) ?? "New Chat"}
+                                            {chat.name?.length < 25 ? chat.name : `${chat.name?.slice(0, 25)}...` || "New Chat"}
                                         </p>
 
                                         <p>{moment(chat.updatedAt).fromNow()}</p>

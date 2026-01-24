@@ -6,8 +6,8 @@ export const LLM_LIMITS = {
     warnAt: 0.8,
   },
   groq: {
-    rpm: 8,
-    rph: 15,
+    rpm: 2,
+    rph: 4,
     rpd: null,
     warnAt: 0.85,
   },

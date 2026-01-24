@@ -3,17 +3,19 @@ import { useAppContext } from '../../context/AppContext';
 import { assets } from '../../assets/assets';
 import toast from 'react-hot-toast';
 import EnableShare from './EnableShare';
+import { useConfirm } from '../../hooks/useConfirm';
 
 const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) => {
 
-    const { setChats, fetchUserChats, setSelectedChat, navigate, axios, getToken, customConfirm, openPopOverModal } = useAppContext();
+    const customConfirm = useConfirm();
+    const { setChats, fetchUserChats, navigate, axios, getToken, openPopOverModal } = useAppContext();
     const [isArchiving, setIsArchiving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleRenameChat = async (e) => {
 
         if (onRename) {
-            e.stopPropagation()
+            e.stopPropagation();
             onRename();
             setRenameInput();
             onClose();
@@ -23,11 +25,11 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
 
     const handleArchiveChat = async () => {
 
-        if(isArchiving){
+        if (isArchiving) {
             toast.error("Already a chat is being archived. Please try later!");
             return;
         }
-        
+
         const confirmed = await customConfirm({ title: "Confirm action", message: "Are you sure you want to archive this chat?" });
         if (!confirmed) return;
 
@@ -47,6 +49,7 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
             if (data.success) {
 
                 await fetchUserChats();
+                navigate("/");
 
                 if (onClose) {
                     onClose();
@@ -55,13 +58,13 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
                 toast.success("Chat Archived Successfully!");
 
             }
-            else{
+            else {
                 toast.error("Failed to archive chat!");
             }
 
         } catch (error) {
             toast.error(error.message);
-        } finally{
+        } finally {
             setIsArchiving(false);
         }
 
@@ -70,7 +73,8 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
     const handleShareChat = async () => {
 
         openPopOverModal({
-            title: chatName, 
+            title: chatName,
+            size: "md",
             content: (
                 <EnableShare
                     chatId={chatId}
@@ -82,7 +86,7 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
 
     const handleDeleteChat = async (e, chatId) => {
 
-        if(isDeleting){
+        if (isDeleting) {
             toast.error("Already a chat is being deleted. Please try later!");
             return;
         }
@@ -113,7 +117,6 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
 
                 setChats(prev => prev.filter(chat => chat._id !== chatId));
                 await fetchUserChats();
-                setSelectedChat(null);
                 navigate('/');
 
                 toast.success(data.message);
@@ -139,7 +142,7 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
     };
 
     return (
-        <div className='border rounded-md border-gray-500 p-1 flex flex-col gap-1 bg-white dark:bg-[#57317c] dark:border-[#80609f]/15 shadow-lg min-w-30'>
+        <div className='border rounded-md border-gray-500 p-1 flex flex-col gap-1 bg-white dark:bg-[#57317c] dark:border-[#80609f]/15 shadow-lg min-w-30 mb-10'>
 
             <button
                 onClick={(e) => handleRenameChat(e)}

@@ -5,10 +5,19 @@ import { useAppContext } from "../../context/AppContext";
 //Disclaimer: This component was coded with the assistance of AI for implementing advanced features.
 
 const BASE_Z = 100;
+const MAX_SIZE_MAP = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  xxl: "max-w-2xl",
+  full: "max-w-full"
+};
+
 
 const PopOverModal = () => {
 
-  const { popOverStack, closePopOverModalAt, popOverClosingIndex, closeTopPopOverModal } = useAppContext();
+  const { popOverStack, closePopOverModalAt, popOverClosingIndex } = useAppContext();
 
   const stackSize = popOverStack.length;
 
@@ -78,11 +87,11 @@ const PopOverModal = () => {
               {/* Modal */}
               <div
                 className={`
-                  w-[90%] max-w-md max-h-[85vh]
+                  w-[90%] ${MAX_SIZE_MAP[modal.size]} max-sm:max-h-[85vh] max-h-[75vh]
                   bg-white dark:bg-gradient-to-b from-[#242124] to-[#000000]
                   backdrop-blur-3xl border border-[#80609F]/30 dark:border-white
-                  rounded-2xl p-5
-                  flex flex-col gap-5 pointer-events-auto
+                  rounded-2xl
+                  flex flex-col pointer-events-auto
                   transition-all duration-300 ease-out
                   ${isTop ? "scale-100" : "scale-95 brightness-95"}
                   ${popOverClosingIndex === index ? "animate-modal-fall" : ""}
@@ -90,7 +99,7 @@ const PopOverModal = () => {
               >
 
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
 
                   <h2 className="text-xl font-medium dark:text-white">
                     {modal.title}
@@ -107,8 +116,8 @@ const PopOverModal = () => {
 
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto">
+                {/* Content - Note: Here, the content is passes as a function */}
+                <div className="flex-1 overflow-hidden">
                   {modal.content}
                 </div>
 

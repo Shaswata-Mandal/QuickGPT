@@ -27,14 +27,15 @@ export const clerkWebhooks = async (req, res) => {
 
             const user = await userModel.findOne({ email: data.email_addresses[0].email_address });
 
-            if(!user){
+            if (!user) {
 
                 const userData = {
                     clerkId: data.id,
                     email: data.email_addresses[0].email_address,
                     firstName: data.first_name,
                     lastName: data.last_name,
-                    photo: data.image_url
+                    photo: data.image_url, 
+                    personalization: {},
                 }
 
                 console.log(userData);
@@ -42,10 +43,13 @@ export const clerkWebhooks = async (req, res) => {
                 await userModel.create(userData);
 
             }
-            else{
+            else {
+
+                await chatModel.deleteMany({ userId: user._id });
+                await avatarMemoryModel.deleteMany({ userId: user._id });
 
                 //update the new clerkId of the old user
-                await userModel.findByIdAndUpdate(user._id, {clerkId: data.id});
+                await userModel.findByIdAndUpdate(user._id, { clerkId: data.id });
 
             }
 
@@ -63,16 +67,16 @@ export const clerkWebhooks = async (req, res) => {
                 photo: data.image_url
             };
 
-            await userModel.findOneAndUpdate( {clerkId: data.id}, userData );
+            await userModel.findOneAndUpdate({ clerkId: data.id }, userData);
 
-            res.json({});
+            res.json({ success: true, message: "User data updated successfully!" });
 
             break;
         }
 
         case "user.deleted": {
 
-            res.json({});
+            res.json({ success: true, message: "User delete successfully!" });
 
             break;
         }
@@ -85,10 +89,10 @@ export const clerkWebhooks = async (req, res) => {
 }
 
 //API to get published images
-export const getPublishedImages = async (req, res)=>{
+export const getPublishedImages = async (req, res) => {
 
     const publishedImageMessages = await chatModel.aggregate([
-        {$unwind: "$messages"},
+        { $unwind: "$messages" },
         {
             $match: {
                 "messages.isImage": true,
@@ -104,39 +108,93 @@ export const getPublishedImages = async (req, res)=>{
         }
     ]);
 
-    res.json({success: true, images: publishedImageMessages.reverse()});
+    res.json({ success: true, images: publishedImageMessages.reverse() });
 
 }
 
 //API to get user credit details
-export const getUserCreditDetails = async (req, res)=>{
+export const getUserCreditDetails = async (req, res) => {
 
-    const {userId} = req.body;
+    const { userId } = req.body;
 
     const user = await userModel.findById(userId);
 
-    if(!user){
-        return res.json({success: false, message: "User not found!"});
+    if (!user) {
+        return res.json({ success: false, message: "User not found!" });
     }
 
-    res.json({success: true, credits: user.creditBalance, freeCredits: user.freeCredits});
+    res.json({ success: true, credits: user.creditBalance, freeCredits: user.freeCredits });
 
 }
 
 //API to get the last purchased plan details
-export const getLastPurchase = async (req, res)=>{
+export const getLastPurchase = async (req, res) => {
 
     const { userId } = req.body;
 
     const lastPurchase = await transactionModel.findOne(
-            { 
-                userId: userId,
-                isPaid: true
-            },
-            { plan: 1 }, 
-            { sort: { createdAt: -1 } }  // Sort by newest first
+        {
+            userId: userId,
+            isPaid: true
+        },
+        { plan: 1 },
+        { sort: { createdAt: -1 } }  // Sort by newest first
     ).lean();
 
-    res.json({success: true, plan: lastPurchase ? lastPurchase.plan : null});
+    res.json({ success: true, plan: lastPurchase ? lastPurchase.plan : null });
+
+}
+
+//API to enable or disable avatarMemory for the user
+export const enableDisableAvatarMemory = async (req, res) => {
+
+    const { userId } = req.body;
+
+    if (!userId || !enableStatus) {
+        return res.json({ success: false, message: "Missing required details!" });
+    }
+
+    const user = await userModel.findById(userId);
+
+    await userModel.updateOne({ _id: userId }, { avatarMemoryEnabled: !user.avatarMemoryEnabled });
+
+    return res.json({ success: true, message: "Avatar memory enable status updated successsfully!", enableStatus: user.avatarMemoryEnabled });
+
+}
+
+//API to enable or disable user personalization memory for the user
+export const enableDisablePersonalizationMemory = async (req, res) => {
+
+    const { userId } = req.body;
+
+    if (!userId || !enableStatus) {
+        return res.json({ success: false, message: "Missing required details!" });
+    }
+
+    const user = await userModel.findById(userId);
+
+    await userModel.updateOne({ _id: userId }, { personalizationMemoryEnabled: !user.personalizationMemoryEnabled });
+
+    return res.json({ success: true, message: "Personalization memory enable status updated successsfully!", enableStatus: user.personalizationMemoryEnabled });
+
+}
+
+//API to update the personalization memory for the user
+export const updatePersonalizationData = async (req, res) => {
+
+    const { userId, payload } = req.body;
+
+    if(!user || !payload) {
+        return res.json({ success: false, message: "Missing required details!" });
+    }
+
+    const user = await userModel.findById(userId);
+
+    await user.updateOne(
+        { _id: userId }, 
+        { $set: { personalization: payload.personalization } }
+    );
+
+    return res.json({ success: true, message: "Personalization data updated successfully!" });
 
 }

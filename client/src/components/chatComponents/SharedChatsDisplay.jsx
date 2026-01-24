@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import moment from 'moment';
 import NothingHere from '../common/NothingHere';
 import EnableShare from './EnableShare';
+import { useConfirm } from '../../hooks/useConfirm';
 
 //Title feature buttons component
 export const SharedChatsTitleFeatures = ({ onDeleteAllSharedChatsClick, onUnshareAllChatsClick, loading }) => {
@@ -37,7 +38,8 @@ export const SharedChatsTitleFeatures = ({ onDeleteAllSharedChatsClick, onUnshar
 
 const SharedChatsDisplay = () => {
 
-  const { axios, getToken, fetchUserChats, setChats, setSelectedChat, navigate, setSlideModal, customConfirm, openPopOverModal, closeTopPopOverModal } = useAppContext();
+  const customConfirm = useConfirm();
+  const { axios, getToken, fetchUserChats, setChats, navigate, setSlideModal, openPopOverModal, closeTopPopOverModal } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [sharedChats, setSharedChats] = useState([]);
   const [processing, setProcessing] = useState(false);
@@ -99,7 +101,8 @@ const SharedChatsDisplay = () => {
 
       }
 
-    } catch {
+    } catch (error) {
+      console.log(error)
       toast.error("Failed to unshare chats");
     } finally {
       setProcessing(false);
@@ -139,6 +142,8 @@ const SharedChatsDisplay = () => {
       if (data.success) {
 
         await fetchAllSharedChats();
+        await fetchUserChats();
+        navigate("/");
         toast.success(data?.message || "All shared chats deleted successfully!");
 
       } else {
@@ -162,6 +167,7 @@ const SharedChatsDisplay = () => {
 
     openPopOverModal({
       title: chatName,
+      size: "md",
       content: (
         <EnableShare
           chatId={chatId}
@@ -207,7 +213,6 @@ const SharedChatsDisplay = () => {
         setChats(prev => prev.filter(chat => chat._id !== chatId));
         await fetchAllSharedChats();
         await fetchUserChats();
-        setSelectedChat(null);
         navigate('/');
 
         toast.success(data.message);
@@ -270,7 +275,7 @@ const SharedChatsDisplay = () => {
   return (
     <div className='flex flex-col gap-3 w-full'>
 
-      {sharedChats.length > 0 && <p className='text-xs text-center px-2 py-1 bg-gray-200 border border-gray-300 rounded-md'>Showing {sharedChats.length} shared chats</p>}
+      {sharedChats.length > 0 && <p className='text-xs text-center px-2 py-2 bg-gray-200 border border-gray-300 rounded-md'>Showing {sharedChats.length} shared chats</p>}
 
       {sharedChats.length === 0 ?
         (
@@ -285,11 +290,10 @@ const SharedChatsDisplay = () => {
 
                 <div key={index} className={`relative py-2 px-4 dark:bg-[#57317c]/10 border border-gray-300 dark:border-[#80609f]/15 rounded-md cursor-pointer flex justify-between items-center group`}>
 
-                  <div>
-
+                  <div className='dark:invert'>
 
                     <p className='truncate w-full'>
-                      {chat.name?.slice(0, 32) ?? "New Chat"}
+                      {chat.name?.length < 25 ? chat.name : `${chat.name?.slice(0, 25)}...` || "New Chat"}
                     </p>
 
                     <p>{moment(chat.updatedAt).fromNow()}</p>

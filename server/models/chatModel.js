@@ -23,6 +23,16 @@ const chatSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    avatarId: {
+        type: String, 
+        ref: "avatar", 
+        default: null,
+    },
+    chatMode: {
+        type: String, 
+        enum: ["default", "avatar"], 
+        default: "default",
+    },
     messages: [
         {
             _id: false,

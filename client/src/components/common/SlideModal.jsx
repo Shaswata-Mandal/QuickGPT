@@ -68,11 +68,10 @@ const SlideModal = ({ isOpen, onClose, children }) => {
           fixed flex flex-col gap-3 z-70 bg-white dark:bg-transparent
           dark:bg-gradient-to-b from-[#242124] to-[#000000]/30
           backdrop-blur-3xl border-l border-[#80609F]/30
-          transition-transform duration-300 ease-out
-          overflow-y-scroll p-5
+          transition-transform duration-300 ease-out p-5
 
           /* Desktop */
-          sm:top-0 sm:right-0 sm:h-screen sm:min-w-80
+          sm:top-0 sm:right-0 sm:h-screen sm:min-w-80 sm:max-w-80
           ${isOpen ? "sm:translate-x-0" : "sm:translate-x-full"}
 
           /* Mobile */
@@ -98,10 +97,10 @@ const SlideModal = ({ isOpen, onClose, children }) => {
           {/* Title */}
           <div className="flex flex-row justify-between items-center gap-5">
 
-            <h2 className="text-2xl font-medium text-black dark:invert">{slideModal.title}</h2>
+            <h2 className="text-2xl font-medium text-black dark:invert">{slideModal?.title}</h2>
 
             <div className="flex items-center gap-3 sm:gap-2">
-              <div className="flex items-center">{slideModal.titleFeature}</div>
+              <div className="flex items-center">{slideModal?.titleFeature}</div>
               <img src={assets.close_icon} className="h-5 w-5 not-dark:invert cursor-pointer" onClick={()=>onClose()} alt="" />
             </div>
 
@@ -109,7 +108,7 @@ const SlideModal = ({ isOpen, onClose, children }) => {
 
         </div>
 
-        <div className="flex flex-1 w-full">
+        <div className="flex flex-1 w-full overflow-y-scroll">
           {children}
         </div>
 

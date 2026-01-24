@@ -3,7 +3,7 @@ import React from 'react'
 const ConfirmDialog = ({ message, onConfirm, onCancel }) => {
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full p-5">
 
       <p className="text-sm text-gray-700 dark:text-gray-200">
         {message}

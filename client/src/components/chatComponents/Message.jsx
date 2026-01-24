@@ -69,9 +69,9 @@ const Message = ({ message, isPublic }) => {
         (
           <div className='flex gap-2 items-start'>
 
-            <img src={assets.logo} className='max-sm:hidden w-8 rounded-full  my-4' alt="" />
+            <img src={assets.logo} className='max-sm:hidden w-8 rounded-full my-4' alt="" />
 
-            <div className='inline-flex flex-col gap-2 py-3 px-4 my-4 bg-primary/20 dark:bg-[#57317c]/30 border border-[#80609f]/30 rounded-md max-w-2xl'>
+            <div className='inline-flex flex-col gap-2 py-3 px-4 my-1 sm:my-4 bg-primary/20 dark:bg-[#57317c]/30 border border-[#80609f]/30 rounded-md max-w-2xl'>
 
               {message.isImage ?
 

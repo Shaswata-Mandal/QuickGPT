@@ -7,6 +7,7 @@ import userRouter from './routes/userRoutes.js'
 import chatRouter from './routes/chatRoutes.js'
 import messageRouter from './routes/messageRoutes.js'
 import creditRouter from './routes/creditRoutes.js'
+import avatarRouter from './routes/avatarRoutes.js'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,7 +16,17 @@ await connectDB();
 
 
 //Middleware
-app.use(cors());
+app.use(cors({
+    exposedHeaders: [
+        "x-chat-name", 
+        "x-llm-warning", 
+        "x-llm-remaining", 
+        "x-llm-locked-provider",
+        "x-llm-locked", 
+        "x-llm-cooldown"
+    ]
+}));
+
 app.use(express.json());
 
 
@@ -28,6 +39,7 @@ app.use('/api/user', userRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/message', messageRouter);
 app.use('/api/plans', creditRouter);
+app.use('/api/avatars', avatarRouter);
 
 app.use((req,res,next)=>{
     next(new ExpressError(404, "Page Not Found"));

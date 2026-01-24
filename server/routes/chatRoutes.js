@@ -1,5 +1,5 @@
 import express from 'express'
-import { archiveUnarchiveChat, createChat, deleteAllArchivedChats, deleteAllSharedChats, deleteChat, enableDisableChatSharing, getAllSharedChats, getArchivedChats, getChats, getSharedChat, getShareStatusAndLink, renameParticularChat, saveSharedChat } from '../controllers/chatController.js'
+import { archiveUnarchiveChat, createChat, deleteAllArchivedChats, deleteAllSharedChats, deleteChat, enableDisableChatSharing, getAllSharedChats, getArchivedChats, getChatMessages, getChats, getSharedChat, getShareStatusAndLink, renameParticularChat, saveSharedChat } from '../controllers/chatController.js'
 import {authUser} from '../middlewares/authUser.js'
 import {wrapAsync} from '../middlewares/WrapAsync.js'
 import {shareRateLimiter} from '../middlewares/shareRateLimiter.js'
@@ -8,6 +8,7 @@ const chatRouter = express.Router();
 
 chatRouter.post('/create', authUser, wrapAsync(createChat));
 chatRouter.get('/get', authUser, wrapAsync(getChats));
+chatRouter.get('/get-chat-messages', authUser, wrapAsync(getChatMessages));
 chatRouter.post('/delete', authUser, wrapAsync(deleteChat));
 
 chatRouter.post('/rename-chat', authUser, wrapAsync(renameParticularChat));
@@ -20,8 +21,8 @@ chatRouter.post('/delete-all-archived-chats', authUser, wrapAsync(deleteAllArchi
 //Chat sharing feature
 chatRouter.post("/share-unshare-chat", authUser, wrapAsync(enableDisableChatSharing));
 chatRouter.get("/get-share-status-and-link", authUser, wrapAsync(getShareStatusAndLink));
-chatRouter.get("/share/:shareId", shareRateLimiter, wrapAsync(getSharedChat));
-chatRouter.post("/share/:shareId/save", shareRateLimiter, authUser, wrapAsync(saveSharedChat));
+chatRouter.get("/get-shared-chat/:shareId", wrapAsync(getSharedChat));
+chatRouter.post("/share/:shareId/save", authUser, wrapAsync(saveSharedChat));
 chatRouter.get("/get-all-shared-chats", authUser, wrapAsync(getAllSharedChats));
 chatRouter.post("/delete-all-shared-chats", authUser, wrapAsync(deleteAllSharedChats));
 
