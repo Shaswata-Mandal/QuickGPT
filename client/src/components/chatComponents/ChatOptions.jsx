@@ -23,7 +23,10 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
 
     };
 
-    const handleArchiveChat = async () => {
+    const handleArchiveChat = async (e) => {
+
+        e.preventDefault();
+        e.stopPropagation();
 
         if (isArchiving) {
             toast.error("Already a chat is being archived. Please try later!");
@@ -70,7 +73,10 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
 
     };
 
-    const handleShareChat = async () => {
+    const handleShareChat = async (e) => {
+
+        e.preventDefault();
+        e.stopPropagation();
 
         openPopOverModal({
             title: chatName,
@@ -85,6 +91,9 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
     };
 
     const handleDeleteChat = async (e, chatId) => {
+
+        e.preventDefault();
+        e.stopPropagation();
 
         if (isDeleting) {
             toast.error("Already a chat is being deleted. Please try later!");
@@ -144,39 +153,43 @@ const ChatOptions = ({ chatId, onClose, onRename, setRenameInput, chatName }) =>
     return (
         <div className='border rounded-md border-gray-500 p-1 flex flex-col gap-1 bg-white dark:bg-[#57317c] dark:border-[#80609f]/15 shadow-lg min-w-30 mb-10'>
 
-            <button
-                onClick={(e) => handleRenameChat(e)}
-                className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
-            >
+            <div className='flex flex-col gap-1 pb-1 border-b'>
 
-                <img src={assets.rename_icon} className='w-4 h-4 dark:invert' alt="Rename" />
-                <p className="text-sm">Rename</p>
+                <button
+                    onClick={(e) => handleRenameChat(e)}
+                    className="flex items-center gap-2 w-full px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
+                >
 
-            </button>
+                    <img src={assets.rename_icon} className='w-4 h-4 dark:invert' alt="Rename" />
+                    <p className="text-sm">Rename</p>
 
-            <button
-                onClick={handleArchiveChat}
-                className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
-            >
+                </button>
 
-                <img src={assets.archive_icon} className='w-4.5 h-5 dark:invert' alt="Rename" />
-                <p className="text-sm">Archive</p>
+                <button
+                    onClick={(e) => handleArchiveChat(e)}
+                    className="flex items-center gap-2 w-full px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
+                >
 
-            </button>
+                    <img src={assets.archive_icon} className='w-4.5 h-5 dark:invert' alt="Rename" />
+                    <p className="text-sm">Archive</p>
 
-            <button
-                onClick={handleShareChat}
-                className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
-            >
+                </button>
 
-                <img src={assets.share_icon} className='w-4 h-4 dark:invert' alt="Rename" />
-                <p className="text-sm">Share</p>
+                <button
+                    onClick={(e) => handleShareChat(e)}
+                    className="flex items-center gap-2 w-full px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
+                >
 
-            </button>
+                    <img src={assets.share_icon} className='w-4 h-4 dark:invert' alt="Rename" />
+                    <p className="text-sm">Share</p>
+
+                </button>
+
+            </div>
 
             <button
                 onClick={(e) => handleDeleteChat(e, chatId)}
-                className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
+                className="flex items-center gap-2 w-full px-2 py-1 border border-red-500 max-sm:bg-red-300 max-sm:dark:bg-red-500 hover:bg-red-300 dark:hover:bg-red-500 rounded-md transition-colors cursor-pointer"
             >
 
                 <img src={assets.bin_icon} className='w-4 h-4 not-dark:invert' alt="Rename" />

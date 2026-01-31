@@ -8,6 +8,18 @@ const ONE_HOUR = 60 * ONE_MIN;
 const ONE_DAY = 24 * ONE_HOUR;
 
 export const checkLLMLimit = async (userId, provider) => {
+
+  if (typeof userId === "string" && userId.startsWith("system:")) {
+
+    return {
+      allowed: true,
+      remaining: null,
+      nearLimit: false,
+      bypassed: true,
+    };
+
+  }
+
   const limits = LLM_LIMITS[provider];
   if (!limits) throw new Error("INVALID_PROVIDER");
 
@@ -15,9 +27,9 @@ export const checkLLMLimit = async (userId, provider) => {
   const key = `llm:${userId}:${provider}`;
 
   const windows = [
-    limits.rpm && { limit: limits.rpm, window: ONE_MIN },
-    limits.rph && { limit: limits.rph, window: ONE_HOUR },
-    limits.rpd && { limit: limits.rpd, window: ONE_DAY },
+    limits.rpm && { name: "rpm", limit: limits.rpm, window: ONE_MIN },
+    limits.rph && { name: "rph", limit: limits.rph, window: ONE_HOUR },
+    limits.rpd && { name: "rpd", limit: limits.rpd, window: ONE_DAY },
   ].filter(Boolean);
 
   const maxWindow = Math.max(...windows.map(w => w.window));
@@ -25,38 +37,56 @@ export const checkLLMLimit = async (userId, provider) => {
   // Cleanup old entries
   await redis.zRemRangeByScore(key, 0, now - maxWindow);
 
-  // Check limits
-  for (const { limit, window } of windows) {
+  let nearLimit = false;
+  let remaining = null;
+  let limitWindow = null;
+
+  for (const { name, limit, window } of windows) {
+
     const count = await redis.zCount(key, now - window, now);
+
+    // Hard limit hit
     if (count >= limit) {
+
       const oldest = await redis.zRangeWithScores(key, 0, 0);
-      const retryAfter = Math.max(
-        window - (now - oldest[0].score),
-        1
-      );
+      const oldestScore = oldest[0]?.score ?? now;
 
       return {
         allowed: false,
-        retryAfter,
+        retryAfter: Math.max(window - (now - oldestScore), 1),
+        provider,
+        limitWindow: name,
       };
-    }
-  }
 
-  // ---- optimistic usage ----
-  const cap = limits.rpd || limits.rph || limits.rpm;
-  const used = (await redis.zCard(key)) + 1;
-  const remaining = cap ? Math.max(cap - used, 0) : null;
-  const usageRatio = cap ? used / cap : 0;
+    }
+
+    const ratio = count / limit;
+
+    // Near-limit warning (per window)
+    if (ratio >= limits.warnAt) {
+      nearLimit = true;
+      remaining = Math.max(limit - count, 0);
+      limitWindow = name;
+    }
+
+  }
 
   return {
     allowed: true,
+    nearLimit,
     remaining,
-    nearLimit: usageRatio >= limits.warnAt,
+    provider,
+    limitWindow, // rpm / rph / rpd
   };
+
 };
 
 export const recordLLMUsage = async (userId, provider) => {
+
+  if (typeof userId === "string" && userId.startsWith("system:")) return;
+
   const key = `llm:${userId}:${provider}`;
   const now = Math.floor(Date.now() / 1000);
-  await redis.zAdd(key, [{ score: now, value: String(now) }]);
+  await redis.zAdd(key, [{ score: now, value: `${now}-${Math.random()}` }]);
+
 };

@@ -15,14 +15,15 @@ const SUMMARY_CHUNK_SIZE = 2;
 const AVATAR_MEMORY_CHUNK_SIZE = 2;
 const AVATAR_MEMORY_TRIGGER = 4;
 
-const getReply = (content, isImage = false, isPublished = false) => {
+const getReply = ({content, isImage = false, isPublished = false, messageType = "normal"}) => {
 
     return {
         role: 'assistant',
         content: content,
         timestamp: Date.now(),
         isImage: isImage,
-        isPublished: isPublished || false
+        isPublished: isPublished, 
+        messageType: messageType,
     }
 
 }
@@ -74,7 +75,7 @@ export const textMessageController = async (req, res) => {
         // Check credits--------------------------------------------------------------
         if (user.freeCredits < 1 && user.creditBalance < 1) {
 
-            const errorReply = getReply("You have reached your credit limit! Please upgrade for more!");
+            const errorReply = getReply({content: "You have reached your credit limit! Please upgrade for more!", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 
@@ -101,7 +102,7 @@ export const textMessageController = async (req, res) => {
 
             if (!avatar || !avatar.isActive) {
 
-                const errorReply = getReply("Requested avatar is currently not available. Please try later!");
+                const errorReply = getReply({content: "Requested avatar is currently not available. Please try later!", messageType: "error"});
                 chat.messages.push(errorReply);
                 await chat.save();
 
@@ -123,7 +124,7 @@ export const textMessageController = async (req, res) => {
         //We will generate the ai response and save it-------------------------------------- 
         let reply = null;
 
-        const systemInstruction = buildSystemInstruction(avatar, avatarMemory, user.avatarMemoryEnabled);
+        const systemInstruction = buildSystemInstruction(user, avatar, avatarMemory, user.memorySettings.avatarMemoryEnabled, user.memorySettings.personalizationMemoryEnabled);
 
         //Building the chat context with existing summary and recent messages
         const recentMessages = chat.messages.slice(chat.summaryIndex);
@@ -145,6 +146,7 @@ export const textMessageController = async (req, res) => {
             res.setHeader("x-llm-warning", "NEAR_LIMIT");
             res.setHeader("x-llm-remaining", meta.remaining);
             res.setHeader("x-llm-locked-provider", meta.provider);
+            res.setHeader("x-llm-window", meta.limitWindow);
 
         }
 
@@ -154,7 +156,7 @@ export const textMessageController = async (req, res) => {
 
         }
 
-        reply = getReply(text);
+        reply = getReply({content: text});
 
         // Add AI response to chat
         chat.messages.push(reply);
@@ -187,7 +189,7 @@ export const textMessageController = async (req, res) => {
         }
 
         //Updating the avatar memory(whenever applicable)--------------------------------
-        if (avatar && user.avatarMemoryEnabled) {
+        if (avatar && user.memorySettings.avatarMemoryEnabled) {
 
             const avatarUnsummarizedCount = totalMessaages - avatarMemory.lastMemoryIndex;
 
@@ -206,7 +208,7 @@ export const textMessageController = async (req, res) => {
                     avatarType: avatar.type
                 });
 
-                avatarMemory.userSummary = newMemory.userSummary || "No memory";
+                avatarMemory.userSummary = newMemory.userSummary || "";
                 avatarMemory.facts = newMemory.facts || [];
 
                 if (avatar.type === "PERSONALITY") {
@@ -216,7 +218,7 @@ export const textMessageController = async (req, res) => {
                 avatarMemory.lastMemoryIndex += AVATAR_MEMORY_CHUNK_SIZE;
                 avatarMemory.lastMemoryUpdatedAt = new Date();
 
-                console.log(avatarMemory);
+                // console.log(avatarMemory);
 
                 await avatarMemory.save();
 
@@ -233,13 +235,11 @@ export const textMessageController = async (req, res) => {
 
         let errorReply = "";
 
-        console.log(aiError)
-
         // console.log(aiError)
 
         if (aiError.message === "RATE_LIMIT") {
 
-            errorReply = getReply(`Free AI limit reached. Please wait for some time before retrying or try using some other model.`);
+            errorReply = getReply({content: `Free AI limit reached. Please wait for some time before retrying or try using some other model.`, messageType: "error"});
 
             res.setHeader("x-llm-locked", "true");
             res.setHeader("x-llm-cooldown", aiError.retryAfter);
@@ -247,7 +247,7 @@ export const textMessageController = async (req, res) => {
 
         }
         else {
-            errorReply = getReply("Sorry, I'm experiencing technical difficulties. Please try again later.");
+            errorReply = getReply({content: "Sorry, I'm experiencing technical difficulties. Please try again later.", messageType: "error"});
         }
 
         chat.messages.push(errorReply);
@@ -316,7 +316,7 @@ export const imageMessageController = async (req, res) => {
         // Check credits
         if (user.freeCredits < 5 && user.creditBalance < 5) {
 
-            const errorReply = getReply("You don't have enough credits to use this feature!");
+            const errorReply = getReply({content: "You don't have enough credits to use this feature!", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 
@@ -337,7 +337,7 @@ export const imageMessageController = async (req, res) => {
         // Check if ImageKit URL endpoint is configured
         if (!process.env.IMAGEKIT_URL_ENDPOINT) {
 
-            const errorReply = getReply("Image service not configured properly. Please try again later.");
+            const errorReply = getReply({content: "Image service not configured properly. Please try again later.", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 
@@ -366,7 +366,7 @@ export const imageMessageController = async (req, res) => {
             //     console.error("Response data:", axiosError.response.data);
             // }
 
-            const errorReply = getReply("Image generation limit reached. Upgrade for more.", false, false);
+            const errorReply = getReply({content: "Image generation limit reached. Upgrade for more.", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 
@@ -383,7 +383,7 @@ export const imageMessageController = async (req, res) => {
 
             // console.log("❌ Empty image data received");
 
-            const errorReply = getReply("Image generation failed. The service returned empty data. Please try again.");
+            const errorReply = getReply({content: "Image generation failed. The service returned empty data. Please try again.", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 
@@ -402,7 +402,7 @@ export const imageMessageController = async (req, res) => {
 
         } catch (bufferError) {
 
-            const errorReply = getReply("Image processing failed. Please try again with a different prompt.");
+            const errorReply = getReply({content: "Image processing failed. Please try again with a different prompt.", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 
@@ -423,7 +423,7 @@ export const imageMessageController = async (req, res) => {
             });
 
             // Successfully generated the AI Image
-            const successReply = getReply(uploadResponse.url, true, isPublished || false);
+            const successReply = getReply({content: uploadResponse.url, isImage: true, isPublished: isPublished || false});
 
             chat.messages.push(successReply);
             await chat.save();
@@ -441,7 +441,7 @@ export const imageMessageController = async (req, res) => {
 
             // console.error("❌ ImageKit upload failed:", uploadError.message);
 
-            const errorReply = getReply("Failed to save the generated image. Please try again.");
+            const errorReply = getReply({content: "Failed to save the generated image. Please try again.", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 

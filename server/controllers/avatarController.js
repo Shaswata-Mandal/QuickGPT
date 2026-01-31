@@ -20,21 +20,21 @@ export const getAvailableAvatarDetails = async (req, res) => {
 //API to get all the avatar memories per user
 export const getAvatarMemories = async (req, res) => {
 
-    const { userId, avatarId } = req.body;
+    const { userId } = req.body;
 
-    if(!userId && !avatarId) {
+    if(!userId) {
         return res.json({ success: false, message: "Missing required details!" });
     }
 
     const user = await userModel.findById(userId);
-
-    const avatarMemories = await avatarMemoryModel.find({ userId, avatarId }).select("userSummary facts emotionalState lastMemoryUpdatedAt");
+    
+    const avatarMemories = await avatarMemoryModel.find({ userId }).select("userSummary facts emotionalState lastMemoryUpdatedAt avatarId -_id");
 
     return res.json({ success: true, avatarMemories, isAvatarMemoryEnabled: user.avatarMemoryEnabled });
 
 }
 
-//API to delete avatar memories
+//API to delete particular or all avatar memories
 export const deleteAvatarMemories = async (req, res) => {
 
     const { userId, avatarId } = req.body;

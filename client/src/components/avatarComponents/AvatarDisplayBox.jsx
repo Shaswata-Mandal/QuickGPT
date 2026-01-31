@@ -1,10 +1,31 @@
 import React from 'react'
 import { useAppContext } from '../../context/AppContext'
-import { AVATAR_IMAGES } from '../../assets/assets'
+import { assets, AVATAR_IMAGES } from '../../assets/assets'
+import AvatarDetails from './AvatarDetails';
 
 const AvatarDisplayBox = () => {
 
-    const { availableAvatars, navigate } = useAppContext();
+    const { availableAvatars, navigate, openPopOverModal, avatarsLoading } = useAppContext();
+
+    const handleAvatarDetailsClick = (avatar) => {
+
+        openPopOverModal({
+            title: "Avatar Details",
+            size: "sm",
+            content: (
+                <AvatarDetails avatar={avatar} />
+            )
+        });
+
+    }
+
+    if (avatarsLoading || !availableAvatars) {
+        return (
+            <div className='flex w-full justify-center items-center min-h-79'>
+                <img src={assets.loading_icon} className='w-5 h-5 dark:invert animate-spin' alt="" />
+            </div>
+        )
+    }
 
     return (
         <div className='w-full p-5 text-center flex flex-col gap-5 h-full overflow-y-scroll'>
@@ -62,13 +83,14 @@ const AvatarDisplayBox = () => {
                         <div className='flex flex-1 gap-2 flex-wrap items-end'>
 
                             <button
+                                onClick={() => handleAvatarDetailsClick(avatar)}
                                 className='h-fit cursor-pointer flex-1 rounded-xl border border-zinc-300 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 active:scale-98 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
                             >
                                 Details
                             </button>
 
                             <button
-                                onClick={()=> navigate(`/avatars/chat/${avatar.key}`)}
+                                onClick={() => navigate(`/avatars/chat/${avatar.key}`)}
                                 className='h-fit cursor-pointer flex-1 rounded-xl border bg-indigo-400 py-2 text-sm font-medium text-black dark:text-white transition hover:bg-indigo-500 active:scale-98 '
                             >
                                 Start Chat

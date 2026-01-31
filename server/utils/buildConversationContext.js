@@ -12,7 +12,7 @@ export const buildConversationContext = (summary, recentMessages) => {
   }
 
   recentMessages
-    .filter(msg => !msg.isImage && typeof msg.content === "string")
+    .filter(msg => !msg.isImage && typeof msg.content === "string" && msg.messageType === "normal")
     .forEach(msg => {
 
       context.push({

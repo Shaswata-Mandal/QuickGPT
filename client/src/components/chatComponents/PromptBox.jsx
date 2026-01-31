@@ -90,10 +90,11 @@ const PromptBox = ({ chatMode, avatarId = null }) => {
             }
 
             //Near limit warning 
-            if (response.headers["x-llm-warning"] === "NEAR-LIMIT") {
+            if (response.headers["x-llm-warning"] === "NEAR_LIMIT") {
                 setLlmWarning({
                     remaining: headers["x-llm-remaining"],
-                    provider: headers["x-llm-locked-provider"]
+                    provider: headers["x-llm-locked-provider"], 
+                    limitWindow: headers["x-llm-window"],
                 });
             }
 

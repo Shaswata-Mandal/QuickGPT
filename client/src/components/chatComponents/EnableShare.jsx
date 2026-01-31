@@ -38,7 +38,7 @@ const EnableShare = ({ chatId, onShareChange, title, index, isTop }) => {
             }
 
         } catch (error) {
-            console.log(error.message);
+            // console.log(error.message);
             toast.error(error.response?.data?.message || "Failed to fetch sharing status.");
         } finally {
             setIsProcessing(false);
@@ -85,7 +85,7 @@ const EnableShare = ({ chatId, onShareChange, title, index, isTop }) => {
             }
 
         } catch (error) {
-            console.log(error.response?.data?.message || error.message)
+            // console.log(error.response?.data?.message || error.message)
             toast.error(action === "generate" ? "Failed to generate link" : "Failed to revoke link");
         } finally {
             setIsProcessing(false);
@@ -147,7 +147,7 @@ const EnableShare = ({ chatId, onShareChange, title, index, isTop }) => {
                 {isProcessing ?
                     (
                         <div>
-                            <img src={assets.loading_icon} className='h-5 w-5 animate-spin' alt="" />
+                            <img src={assets.loading_icon} className='h-5 w-5 animate-spin dark:invert' alt="" />
                         </div>
                     )
                     :

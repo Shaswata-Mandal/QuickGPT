@@ -7,20 +7,13 @@ import toast from "react-hot-toast";
 //Making the backend url as the base url for any axios api call
 axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
 
-// also include error message in the chat - done
-// update ui - done
-//name and rename - done
-//archive - done
-// delete all archived chats, archive all chats backend logic - done
-//share chat ui -done, backend logic for shared chat feature - done
-//context saving, summary - done
-//ai model choose option - done
-//ai avatars - with memories - half done - show the avatar memory in popover modal,  details of avatar in avatars page, show image and header so that user knows to which avatar he is talking 
-//expert team - career coach, finance advisor, etc - pending
-
-//llm-warning toast
-//search box shift it to popover modal - half done - pin chat left
-//don't give the error replies to the summarization and context building. add replyType in chat model to the message
+//Upcoming Weekly Features to be added: 
+//1) Pin chat, Group the sidebar chats by date, chatMode (avatar or default) and pinned chats
+//2) Expert Avatars
+//3) Create your own avatar
+//4) Summarize the whole chat in one click
+//5) Scroll down button
+//6) Advanced search feature - avatar filter
 
 const AppContext = createContext();
 
@@ -60,25 +53,12 @@ export const AppContextProvider = ({ children }) => {
     const [plans, setPlans] = useState([]);
 
     const [availableAvatars, setAvailableAvatars] = useState(null);
-    const [avatarsLoading, setAvatarsLoading] = useState(false);
+    const [avatarsLoading, setAvatarsLoading] = useState(true);
+    const [selectedChatAvatar, setSelectedChatAvatar] = useState(null);
+    const [selectedChatAvatarId, setSelectedChatAvatarId] = useState(null);
 
     const [llmWarning, setLlmWarning] = useState(null);
     const [cooldownInfo, setCooldownInfo] = useState(JSON.parse(localStorage.getItem("llmCooldownInfo")) || {});
-
-    //-----------------------------------------------------------------------------------------------------------
-
-    const getRemaningCooldown = (provider) => {
-
-        const data = cooldownInfo[provider];
-
-        if (!data) return null;
-
-        const elapsed = Math.floor((Date.now() - data.startedAt) / 1000);
-        const remaining = data.retryAfter - elapsed;
-
-        return remaining > 0 ? remaining : null;
-
-    };
 
     //-----------------------------------------------------------------------------------------------------------
 
@@ -109,6 +89,7 @@ export const AppContextProvider = ({ children }) => {
     const fetchChatMessages = async (chatId) => {
 
         setMessagesLoading(true);
+        setSelectedChatAvatarId(null);
 
         try {
 
@@ -117,22 +98,112 @@ export const AppContextProvider = ({ children }) => {
             const { data } = await axios.get(`/api/chat/get-chat-messages?chatId=${chatId}`, { headers: { Authorization: token } });
 
             if (data.success) {
+                
                 setMessages(data.chatMessages);
                 setMessagesChatId(chatId);
+                setSelectedChatAvatarId(data.avatarId);
+
             }
             else {
                 navigate("/")
-                toast.error(data.message);
+                toast.error(data.message || "Failed to fetch chat messages");
             }
 
         } catch (error) {
 
             navigate("/");
             // console.log(error);
-            toast.error(error.response?.data?.message);
+            toast.error(error.response?.data?.message || "Failed to fetch chat messages");
 
         } finally {
             setMessagesLoading(false);
+        }
+
+    }
+
+    //-----------------------------------------------------------------------------------------------------------
+
+    const fetchPlans = async () => {
+
+        try {
+
+            const token = await getToken();
+
+            const { data } = await axios.get('/api/plans/get-plans', { headers: { Authorization: token } });
+
+            if (data.success) {
+
+                setPlans(data.plans);
+
+            }
+            else {
+                toast.error(data.message || "Failed to fetch plans!");
+            }
+
+        } catch (error) {
+            toast.error(error.message);
+        }
+
+    };
+
+    const fetchCreditDetails = async () => {
+
+        if (!user) return;
+
+        setIsCreditsLoading(true);
+
+        try {
+
+            const token = await getToken();
+
+            const { data } = await axios.get('/api/user/get-credits', { headers: { Authorization: token } });
+
+            if (data.success) {
+
+                setCredits(data.credits);
+                setFreeCredits(data.freeCredits)
+
+            }
+            else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            // console.log(error.message);
+        } finally {
+            setIsCreditsLoading(false);
+        }
+
+    }
+
+    //Function to fetch all the user chats
+    const fetchUserChats = async () => {
+
+        setUserChatsLoading(true);
+
+        try {
+
+            const token = await getToken();
+
+            const { data } = await axios.get('/api/chat/get', {
+                headers: {
+                    Authorization: token
+                }
+            });
+
+            if (data.success) {
+
+                setChats(data.chats);
+
+            }
+            else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            toast.error(error.message);
+        } finally {
+            setUserChatsLoading(false);
         }
 
     }
@@ -188,58 +259,18 @@ export const AppContextProvider = ({ children }) => {
 
     //-----------------------------------------------------------------------------------------------------------
 
-    const fetchPlans = async () => {
+    const getRemaningCooldown = (provider) => {
 
-        try {
+        const data = cooldownInfo[provider];
 
-            const token = await getToken();
+        if (!data) return null;
 
-            const { data } = await axios.get('/api/plans/get-plans', { headers: { Authorization: token } });
+        const elapsed = Math.floor((Date.now() - data.startedAt) / 1000);
+        const remaining = data.retryAfter - elapsed;
 
-            if (data.success) {
-
-                setPlans(data.plans);
-
-            }
-            else {
-                toast.error(data.message || "Failed to fetch plans!");
-            }
-
-        } catch (error) {
-            toast.error(error.message);
-        }
+        return remaining > 0 ? remaining : null;
 
     };
-
-    const fetchCreditDetails = async () => {
-
-        if (!user) return;
-
-        setIsCreditsLoading(true);
-
-        try {
-
-            const token = await getToken();
-
-            const { data } = await axios.get('/api/user/get-credits', { headers: { Authorization: token } });
-
-            if (data.success) {
-
-                setCredits(data.credits);
-                setFreeCredits(data.freeCredits)
-
-            }
-            else {
-                toast.error(data.message);
-            }
-
-        } catch (error) {
-            console.log(error.message);
-        } finally {
-            setIsCreditsLoading(false);
-        }
-
-    }
 
     //Function to create a new chat
     const createNewChat = async (chatMode, avatarId) => {
@@ -261,6 +292,7 @@ export const AppContextProvider = ({ children }) => {
                 setMessagesChatId(data.chat._id);
                 setChats(prev => [data.chat, ...prev]);
                 navigate(`/chat/${data.chat._id}`);
+                setSelectedChatAvatarId(avatarId);
                 return data.chat;
 
             } else {
@@ -285,38 +317,6 @@ export const AppContextProvider = ({ children }) => {
                     : chat
             )
         );
-
-    }
-
-    //Function to fetch all the user chats
-    const fetchUserChats = async () => {
-
-        setUserChatsLoading(true);
-
-        try {
-
-            const token = await getToken();
-
-            const { data } = await axios.get('/api/chat/get', {
-                headers: {
-                    Authorization: token
-                }
-            });
-
-            if (data.success) {
-
-                setChats(data.chats);
-
-            }
-            else {
-                toast.error(data.message);
-            }
-
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setUserChatsLoading(false);
-        }
 
     }
 
@@ -384,9 +384,24 @@ export const AppContextProvider = ({ children }) => {
 
     }, []);
 
+    //Setting the avatar for the avatar chat mode to show image in the chatbox
     useEffect(() => {
-        console.log(cooldownInfo);
-    }, [cooldownInfo]);
+
+        if(!selectedChatAvatarId || !availableAvatars?.length) {
+            setSelectedChatAvatar(null);
+            return;
+        }
+
+        const avatar = availableAvatars.find((item) => item._id === selectedChatAvatarId) || null;
+
+        setSelectedChatAvatar(avatar);
+
+    }, [selectedChatAvatarId, availableAvatars]);
+
+    //Setting the llmWarning to null whenever selected model changes
+    useEffect(() => {
+        setLlmWarning(null);
+    }, [selectedModel]);
 
     const value = {
 
@@ -407,8 +422,8 @@ export const AppContextProvider = ({ children }) => {
         popOverStack, setPopOverStack, closeTopPopOverModal, openPopOverModal, closePopOverModalAt, popOverClosingIndex, setPopOverClosingIndex,
         fetchChatMessages, messages, setMessages, messagesLoading, setMessagesLoading, responseLoading, setResponseLoading,
         selectedModel, setSelectedModel, messagesChatId, setMessagesChatId,
-        availableAvatars, setAvailableAvatars, avatarsLoading, setAvatarsLoading, fetchAvatarDetails,
-        llmWarning, setLlmWarning, cooldownInfo, setCooldownInfo, getRemaningCooldown,
+        availableAvatars, setAvailableAvatars, avatarsLoading, setAvatarsLoading, fetchAvatarDetails, selectedChatAvatar, setSelectedChatAvatar,
+        llmWarning, setLlmWarning, cooldownInfo, setCooldownInfo, getRemaningCooldown, selectedChatAvatarId, setSelectedChatAvatarId, 
 
     }
 

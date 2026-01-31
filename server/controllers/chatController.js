@@ -79,7 +79,7 @@ export const getChatMessages = async (req, res) => {
       });
     }
 
-    res.json({ success: true, chatMessages: chat.messages });
+    res.json({ success: true, chatMessages: chat.messages, avatarId: chat.avatarId });
 
 }
 
@@ -418,8 +418,8 @@ export const saveSharedChat = async (req, res) => {
         return res.status(404).json({ success: false, message: "Shared chat not found!" });
     }
 
-    console.log(originalChat.userId);
-    console.log(req.body.userId);
+    // console.log(originalChat.userId);
+    // console.log(req.body.userId);
 
     //Prevent saving your own chat
     if (originalChat.userId.toString() === req.body.userId.toString()) {

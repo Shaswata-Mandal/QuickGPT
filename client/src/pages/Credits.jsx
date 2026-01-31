@@ -30,7 +30,7 @@ const Credits = () => {
       }
 
     } catch (error) {
-      console.log(error.message);
+      // console.log(error.message);
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ const Credits = () => {
 
         const token = await getToken();
 
-        console.log(response)
+        // console.log(response)
 
         //verifying the payment
         try {
@@ -125,7 +125,7 @@ const Credits = () => {
       }
 
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       toast.error(error.message);
     }
 

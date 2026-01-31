@@ -52,10 +52,6 @@ const SharedChatDisplayBox = ({ }) => {
 
   }, [shareId]);
 
-  useEffect(() => {
-    console.log(chat);
-  }, [chat])
-
   const handleSaveCopyClick = async () => {
 
     setCopying(true);
@@ -87,7 +83,7 @@ const SharedChatDisplayBox = ({ }) => {
 
   if (loading) {
     return (
-      <div className='flex justify-center mt-10'> <img src={assets.loading_icon} className='w-6 h-6 animate-spin' alt="" /> </div>
+      <div className='flex justify-center mt-10'> <img src={assets.loading_icon} className='w-6 h-6 animate-spin dark:invert' alt="" /> </div>
     )
   }
 

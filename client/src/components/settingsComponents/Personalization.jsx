@@ -1,20 +1,23 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import CustomSelect from '../common/CustomSelect';
+import { assets } from '../../assets/assets';
+import { useAppContext } from '../../context/AppContext';
+import toast from 'react-hot-toast';
 
 const DEFAULT_SETTINGS = {
-  baseStyle: "default",
   tone: {
     warm: "default",
-    enthusiastic: "default",
-  }, 
-  formatting: {
-    headersLists: "default",
-    emoji: "default",
+    enthusiastic: "default"
   },
-  customInstructions: "",
-  nickname: "", 
-  occupation: "", 
-  moreAboutYou: "",
+  formatting: {
+    headerLists: "default",
+    emoji: "default"
+  },
+  baseStyle: "default",
+  customInstruction: "",
+  nickname: "",
+  occupation: "Doctor",
+  moreAboutYou: ""
 };
 
 const PERSONALIZATION_FIELDS = [
@@ -22,34 +25,108 @@ const PERSONALIZATION_FIELDS = [
     id: "warm",
     label: "Warm",
     path: ["tone", "warm"],
-    options: ["default", "low", "medium", "high"],
+    options: ["default", "more", "less"],
   },
   {
     id: "enthusiastic",
     label: "Enthusiastic",
     path: ["tone", "enthusiastic"],
-    options: ["default", "low", "medium", "high"],
+    options: ["default", "more", "less"],
   },
   {
-    id: "headersLists",
+    id: "headerLists",
     label: "Headers & Lists",
-    path: ["formatting", "headersLists"],
-    options: ["default", "compact", "expanded"],
+    path: ["formatting", "headerLists"],
+    options: ["more", "default", "less"],
   },
   {
     id: "emoji",
     label: "Emoji",
     path: ["formatting", "emoji"],
-    options: ["default", "never", "sometimes", "often"],
+    options: ["more", "default", "less"],
   },
 ];
 
 const Personalization = ({ name }) => {
 
+  const { axios, getToken } = useAppContext();
+
   const [savedSettings, setSavedSettings] = useState(DEFAULT_SETTINGS);
   const [draftSettings, setDraftSettings] = useState(DEFAULT_SETTINGS);
+  const [processing, setProcessing] = useState(false);
 
   const hasChanges = JSON.stringify(savedSettings) !== JSON.stringify(draftSettings);
+
+  const fetchPersonalizationData = async () => {
+
+    if (processing) {
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+
+      const token = await getToken();
+
+      const { data } = await axios.get("/api/user/get-personalization-data", { headers: { Authorization: token } });
+
+      if (data.success) {
+
+        setSavedSettings(data.personalizationData);
+        setDraftSettings(data.personalizationData);
+
+      }
+      else {
+        toast.error("Failed to fetch personalization data");
+      }
+
+    } catch (error) {
+
+      toast.error(error.response?.data?.message || "Failed to fetch saved personalization data");
+
+    } finally {
+      setProcessing(false);
+    }
+
+  }
+
+  const handleSaveChangesClick = async () => {
+
+    if (!hasChanges) {
+      return;
+    }
+
+    if (processing) {
+      toast.error("Action in progress. Please wait!");
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+
+      const token = await getToken();
+
+      const { data } = await axios.patch("/api/user/update-personalization-data", { payload: draftSettings }, { headers: { Authorization: token } });
+
+      if (data.success) {
+
+        setSavedSettings(draftSettings);
+        toast.success(data.message);
+
+      }
+      else {
+        toast.error("Failed to save personalization data");
+      }
+
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to fetch saved personalization data");
+    } finally {
+      setProcessing(false);
+    }
+
+  }
 
   const updateDraft = (path, value) => {
 
@@ -58,11 +135,11 @@ const Personalization = ({ name }) => {
       const updated = structuredClone(prev);
       let ref = updated;
 
-      for(let i=0; i<path.length-1; i++) {
+      for (let i = 0; i < path.length - 1; i++) {
         ref = ref[path[i]];
       }
 
-      ref[path[path.length-1]] = value;
+      ref[path[path.length - 1]] = value;
 
       return updated;
 
@@ -70,17 +147,45 @@ const Personalization = ({ name }) => {
 
   }
 
+  useEffect(() => {
+
+    fetchPersonalizationData();
+
+  }, []);
+
+  if (processing) {
+    return (
+      <div className='flex-1 mt-6 flex justify-center text-sm space-y-3 min-h-50 md:min-h-40'>
+
+        <img src={assets.loading_icon} className='w-5 h-5 dark:invert animate-spin' alt="" />
+
+      </div>
+    )
+  }
+
   return (
 
     <div className="flex flex-col px-4 pb-2 w-full max-h-100">
 
-      <div className='flex py-3 border-b dark:invert'>
+      <div className='flex justify-between py-3 border-b dark:invert'>
 
         <p className='text-md font-medium'>{name}</p>
 
-        {hasChanges && (
-          <span className='text-xs text-orange-500 ml-auto bg-orange-200 rounded-md px-2 flex items-center justify-center'>Unsaved changes</span>
-        )}
+        <div className='flex gap-3'>
+
+          {hasChanges && (
+            <span className='text-xs text-orange-500 ml-auto bg-orange-200 rounded-md px-2 flex items-center justify-center'>Unsaved changes</span>
+          )}
+
+          <button
+            onClick={() => setDraftSettings(savedSettings)}
+            disabled={!hasChanges}
+            className={`disabled:opacity-50 disabled:cursor-not-allowed ml-auto active:scale-95 cursor-pointer`}
+          >
+            <img src={assets.reset_icon} className='w-5 h-5 dark:invert' alt="" />
+          </button>
+
+        </div>
 
       </div>
 
@@ -101,7 +206,7 @@ const Personalization = ({ name }) => {
 
             <CustomSelect
               value={draftSettings.baseStyle}
-              options={["more", "default", "less"]}
+              options={["default", "professional", "friendly", "candid", "quirky", "efficient", "nerdy", "cynical"]}
               placeholder='Select Base style and tone'
               onChange={(value) => updateDraft(["baseStyle"], value)}
             />
@@ -148,19 +253,19 @@ const Personalization = ({ name }) => {
         {/* Custom Instruction */}
         <div className='flex flex-col mt-3 dark:invert pb-5 border-b dark:border-white '>
 
-            <p className='text-sm font-medium mb-2'>Custom Instruction</p>
+          <p className='text-sm font-medium mb-2'>Custom Instruction</p>
 
-            <div className='border rounded-md py-2'>
+          <div className='border rounded-md py-2'>
 
-              <input 
-                value={draftSettings.customInstructions}
-                onChange={(e) => updateDraft(["customInstructions"], e.target.value)}
-                className='text-sm outline-none w-full px-3' 
-                placeholder='Additional behaviour, style and tone preference' 
-                type="text" 
-              />
+            <input
+              value={draftSettings.customInstruction}
+              onChange={(e) => updateDraft(["customInstruction"], e.target.value)}
+              className='text-sm outline-none w-full px-3'
+              placeholder='Additional behaviour, style and tone preference'
+              type="text"
+            />
 
-            </div>
+          </div>
 
         </div>
 
@@ -179,12 +284,12 @@ const Personalization = ({ name }) => {
 
             <div className='border rounded-md py-2'>
 
-              <input 
+              <input
                 value={draftSettings.nickname}
                 onChange={(e) => updateDraft(["nickname"], e.target.value)}
-                className='text-sm outline-none w-full px-3' 
-                placeholder='What should quickgpt call you?' 
-                type="text" 
+                className='text-sm outline-none w-full px-3'
+                placeholder='What should quickgpt call you?'
+                type="text"
               />
 
             </div>
@@ -198,12 +303,12 @@ const Personalization = ({ name }) => {
 
             <div className='border rounded-md py-2'>
 
-              <input 
+              <input
                 value={draftSettings.occupation}
                 onChange={(e) => updateDraft(["occupation"], e.target.value)}
-                className='text-sm outline-none w-full px-3' 
-                placeholder='Doctor, Engineer, Lawyer, Manager...' 
-                type="text" 
+                className='text-sm outline-none w-full px-3'
+                placeholder='Doctor, Engineer, Lawyer, Manager...'
+                type="text"
               />
 
             </div>
@@ -219,19 +324,19 @@ const Personalization = ({ name }) => {
 
               <div className='border rounded-md py-2'>
 
-                <input 
+                <input
                   value={draftSettings.moreAboutYou}
                   onChange={(e) => updateDraft(["moreAboutYou"], e.target.value)}
-                  className='text-sm outline-none w-full px-3' 
-                  placeholder='Interest, values or preferences to keep in mind' 
+                  className='text-sm outline-none w-full px-3'
+                  placeholder='Interest, values or preferences to keep in mind'
                   type="text"
                 />
 
               </div>
 
               <button
-                disabled={!hasChanges}
-                onClick={() => handleSaveClick()}
+                disabled={!hasChanges || processing}
+                onClick={() => handleSaveChangesClick()}
                 className={`disabled:opacity-30 disabled:cursor-not-allowed py-2 px-3 text-sm cursor-pointer border max-w-fit rounded-md mt-5 ml-auto`}
               >
                 Save All Above Changes

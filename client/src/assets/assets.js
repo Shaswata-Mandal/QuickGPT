@@ -61,6 +61,8 @@ import new_tab_icon from './new-tab.png'
 import down_arrow_icon from './down-arrow.png'
 import pin_icon from './pin.png'
 import settings_icon from './settings.png'
+import info_icon from './info.png'
+import reset_icon from './reset.png'
 
 export const assets = {
     logo, logo_full, search_icon, user_icon, send_icon, stop_icon, mountain_img, menu_icon,
@@ -70,7 +72,7 @@ export const assets = {
     planet_icon, share_icon, shared_chats_icon, archived_chats_icon, unshare_chats_icon, copy_icon,
     model_preference_icon, gemini, auto, groq, sort_icon, new_chat_icon, chat_icon, new_tab_icon,
     avatars_icon, chanakya, gautama_buddha, mahatma_gandhi, swami_vivekananda, rabindranath_tagore,
-    down_arrow_icon, pin_icon, settings_icon,
+    down_arrow_icon, pin_icon, settings_icon, info_icon, reset_icon,
 };
 
 export const dummyUserData = {

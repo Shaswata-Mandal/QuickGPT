@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const chatSchema = new mongoose.Schema({
-
+    
     userId: {
         type: String,
         ref: 'user',
@@ -55,6 +55,12 @@ const chatSchema = new mongoose.Schema({
             timestamp: {
                 type: Number,
                 required: true,
+            },
+            messageType: {
+                type: String, 
+                enum: ["normal", "error"], 
+                required: true,
+                default: "normal"
             },
         }
     ],

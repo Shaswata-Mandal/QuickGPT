@@ -13,7 +13,7 @@ const Sidebar = () => {
 
   const { signOut } = useClerk();
   const customConfirm = useConfirm();
-  const { openPopOverModal, selectedChatId, chats, theme, user, navigate, getToken, axios, isMenuOpen, setIsMenuOpen, updateChatName, userChatsLoading, setUserChatsLoading, fetchUserChats, setSelectedChatId, setMessagesChatId } = useAppContext();
+  const { setSelectedChatAvatarId, responseLoading, selectedChatAvatarId, openPopOverModal, selectedChatId, chats, theme, user, navigate, getToken, axios, isMenuOpen, setIsMenuOpen, updateChatName, userChatsLoading, setUserChatsLoading, fetchUserChats, setSelectedChatId, setMessagesChatId } = useAppContext();
   const [activeChatOptions, setActiveChatOptions] = useState(null);
   const [renamedChatName, setRenamedChatName] = useState(null);
   const [renameChatId, setRenameChatId] = useState(null);
@@ -52,6 +52,11 @@ const Sidebar = () => {
 
   const handleChatClick = (chat) => {
 
+    if(responseLoading) {
+      toast.error("Please wait while response is loading in the current chat!");
+      return;
+    }
+
     navigate(`/chat/${chat._id}`);
     handleCloseSidebar();
 
@@ -59,8 +64,13 @@ const Sidebar = () => {
 
   const handleArchiveAllChatsClick = async () => {
 
-    if (processing || userChatsLoading) {
+    if (processing || userChatsLoading || responseLoading) {
       toast.error("Please wait, an action is already in progress.");
+      return;
+    }
+
+    if (chats.length === 0) {
+      toast.error("No chats to archive!");
       return;
     }
 
@@ -102,7 +112,7 @@ const Sidebar = () => {
 
   const handleDeleteAllClick = async () => {
 
-    if (processing || userChatsLoading) {
+    if (processing || userChatsLoading || responseLoading) {
       toast.error("Please wait, an action is already in progress.");
       return;
     }
@@ -210,7 +220,7 @@ const Sidebar = () => {
         <img className='w-full max-w-48' src={theme === 'dark' ? assets.logo_full : assets.logo_full_dark} alt="" />
 
         {/* New Chat Button */}
-        <button onClick={() => { navigate('/'); handleCloseSidebar(); }} className='flex justify-center items-center w-full py-2 mt-5 text-white bg-gradient-to-r from-[#A456f7] to-[#3d81f6] text-sm rounded-md cursor-pointer'>
+        <button disabled={responseLoading} onClick={() => { navigate('/'); setSelectedChatAvatarId(null); handleCloseSidebar(); }} className='disabled:opacity-90 flex justify-center items-center w-full py-2 mt-5 text-white bg-gradient-to-r from-[#A456f7] to-[#3d81f6] text-sm rounded-md cursor-pointer'>
 
           <span className='mr-2 text-xl'>+</span> New Chat
 
@@ -239,12 +249,12 @@ const Sidebar = () => {
         </div>
 
         {/* Avatars page button */}
-        <div onClick={() => { navigate("/avatars"); setSelectedChatId(null); setMessagesChatId(null); handleCloseSidebar(); }} className='flex items-center hover:bg-gray-200 dark:hover:bg-primary/20 cursor-pointer gap-2 px-3 py-2 rounded-md'>
+        <button disabled={responseLoading} onClick={() => { navigate("/avatars"); setSelectedChatId(null); setMessagesChatId(null); setSelectedChatAvatarId(null); handleCloseSidebar(); }} className='disabled:opacity-90 flex items-center hover:bg-gray-200 dark:hover:bg-primary/20 cursor-pointer gap-2 px-3 py-2 rounded-md'>
 
           <img src={assets.avatars_icon} className='w-5 h-5 dark:invert' alt="" />
           <span className='text-sm'>Explore Avatars</span>
 
-        </div>
+        </button>
 
         {/* Recent Chats */}
         <div className='mt-2 flex justify-between items-center'>
@@ -254,7 +264,7 @@ const Sidebar = () => {
           <div className='flex gap-3'>
 
             <button
-              disabled={processing}
+              disabled={processing || responseLoading}
               className='disabled:opacity-50'
               onClick={() => handleArchiveAllChatsClick()}
               title='Archive all chats'
@@ -263,7 +273,7 @@ const Sidebar = () => {
             </button>
 
             <button
-              disabled={processing}
+              disabled={processing || responseLoading}
               className='disabled:opacity-50'
               onClick={() => handleDeleteAllClick()}
               title='Delete all chats'
@@ -292,10 +302,14 @@ const Sidebar = () => {
                   (
                     chats?.map((chat) => (
 
-                      <div onClick={() => handleChatClick(chat)} key={chat._id} className={`relative py-2 pl-3 pr-1 dark:bg-[#57317c]/10 border ${chat._id === selectedChatId ? "border-black dark:border-white" : "border-gray-300 dark:border-[#80609f]/15"} rounded-md cursor-pointer flex justify-between items-center group min-w-0`}>
+                      <div 
+                        onClick={() => handleChatClick(chat)} 
+                        key={chat._id} 
+                        className={`w-full relative py-2 pl-3 pr-1 dark:bg-[#57317c]/10 border ${chat._id === selectedChatId ? "border-black dark:border-white" : "border-gray-300 dark:border-[#80609f]/15"} ${ chat.chatMode === "avatar" ? "bg-pink-100 dark:bg-primary/30" : "" } rounded-md cursor-pointer flex justify-between items-center group min-w-0`}
+                      >
 
                         {/* Chat renaming input box and name box */}
-                        <div>
+                        <div className='flex flex-col items-start'>
 
                           {
                             renameChatId === chat._id ?

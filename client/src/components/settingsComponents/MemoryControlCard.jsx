@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { assets } from '../../assets/assets'
 
-const MemoryControlCard = ({ icon, title, description, enabled, onToggle, onManage }) => {
+const MemoryControlCard = ({ icon, title, description, enabled, onToggle, onManage, processing }) => {
 
     return (
         <div className='flex flex-col gap-3 px-3 py-4 border rounded-md'>
@@ -22,11 +22,25 @@ const MemoryControlCard = ({ icon, title, description, enabled, onToggle, onMana
 
                 <div className='dark:invert'>
 
-                    <button className={`relative w-10 h-6 rounded-md transition-colors ${enabled ? "bg-primary " : "bg-gray-300 dark:bg-gray-600"}`}>
+                    {processing ? (
 
-                        <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-md transition-transform ${enabled ? "translate-x-4" : "translate-x-0"}`}></span>
+                        <div className='flex w-10 h-6 justify-center items-center'>
+                            <img src={assets.loading_icon} className='w-5 h-5 dark:invert animate-spin' alt="" />
+                        </div>
 
-                    </button>
+                    ) : (
+
+                        <button
+                            disabled={processing}
+                            onClick={onToggle}
+                            className={`relative cursor-pointer disabled:opacity-80 w-10 h-6 rounded-md transition-colors ${enabled ? "bg-primary " : "bg-gray-300 dark:bg-gray-600"}`}
+                        >
+
+                            <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-md transition-transform ${enabled ? "translate-x-4" : "translate-x-0"}`}></span>
+
+                        </button>
+
+                    )}
 
                 </div>
 

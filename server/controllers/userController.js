@@ -2,6 +2,7 @@ import { Webhook } from 'svix'
 import userModel from '../models/userModel.js'
 import chatModel from '../models/chatModel.js';
 import transactionModel from '../models/transactionModel.js'
+import avatarMemoryModel from '../models/avatarMemoryModel.js';
 //API Controller function to manage clerk user with our database
 // http://localhost:3000/api/user/webhooks
 
@@ -34,11 +35,12 @@ export const clerkWebhooks = async (req, res) => {
                     email: data.email_addresses[0].email_address,
                     firstName: data.first_name,
                     lastName: data.last_name,
-                    photo: data.image_url, 
+                    photo: data.image_url,
                     personalization: {},
+                    memorySettings: {},
                 }
 
-                console.log(userData);
+                // console.log(userData);
 
                 await userModel.create(userData);
 
@@ -145,37 +147,65 @@ export const getLastPurchase = async (req, res) => {
 
 }
 
-//API to enable or disable avatarMemory for the user
-export const enableDisableAvatarMemory = async (req, res) => {
+//API to enable status of the memory settings
+export const getMemorySettings = async (req, res) => {
 
     const { userId } = req.body;
 
-    if (!userId || !enableStatus) {
-        return res.json({ success: false, message: "Missing required details!" });
+    const user = await userModel.findById(userId).select("memorySettings");
+
+    if (!user) {
+        return res.json({ success: false, message: "User not found!" });
     }
 
-    const user = await userModel.findById(userId);
-
-    await userModel.updateOne({ _id: userId }, { avatarMemoryEnabled: !user.avatarMemoryEnabled });
-
-    return res.json({ success: true, message: "Avatar memory enable status updated successsfully!", enableStatus: user.avatarMemoryEnabled });
+    return res.json({ success: true, memorySettings: user.memorySettings });
 
 }
 
-//API to enable or disable user personalization memory for the user
-export const enableDisablePersonalizationMemory = async (req, res) => {
+//API to update the enable status of the user memory settings
+export const updateMemorySettings = async (req, res) => {
+
+    const { userId, updates } = req.body;
+
+    if (!updates || typeof updates !== "object") {
+        return res.json({ success: false, message: "Invalid update payload" });
+    }
+
+    const allowedFields = [
+        "avatarMemoryEnabled",
+        "personalizationMemoryEnabled",
+    ];
+
+    const updatePayload = {};
+
+    for (const key of allowedFields) {
+        if (key in updates) {
+            updatePayload[`memorySettings.${key}`] = updates[key];
+        }
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+        return res.json({ success: false, message: "No valid fields to update" });
+    }
+
+    await userModel.findByIdAndUpdate(userId, { $set: updatePayload });
+
+    return res.json({ success: true, message: "Memory settings updated" });
+
+}
+
+//API to get the personalization data of the user
+export const getPersonalizationData = async (req, res) => {
 
     const { userId } = req.body;
 
-    if (!userId || !enableStatus) {
+    if (!userId) {
         return res.json({ success: false, message: "Missing required details!" });
     }
 
     const user = await userModel.findById(userId);
 
-    await userModel.updateOne({ _id: userId }, { personalizationMemoryEnabled: !user.personalizationMemoryEnabled });
-
-    return res.json({ success: true, message: "Personalization memory enable status updated successsfully!", enableStatus: user.personalizationMemoryEnabled });
+    return res.json({ success: true, personalizationData: user.personalization })
 
 }
 
@@ -184,16 +214,16 @@ export const updatePersonalizationData = async (req, res) => {
 
     const { userId, payload } = req.body;
 
-    if(!user || !payload) {
+    if (!userId || !payload) {
         return res.json({ success: false, message: "Missing required details!" });
     }
 
-    const user = await userModel.findById(userId);
-
-    await user.updateOne(
-        { _id: userId }, 
-        { $set: { personalization: payload.personalization } }
+    await userModel.findByIdAndUpdate(
+        userId,
+        { $set: { personalization: payload } },
+        { new: true }
     );
+
 
     return res.json({ success: true, message: "Personalization data updated successfully!" });
 

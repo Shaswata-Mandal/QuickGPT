@@ -1,23 +1,109 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import MemoryControlCard from './MemoryControlCard'
 import { assets } from '../../assets/assets'
 import { useAppContext } from '../../context/AppContext'
 import AvatarMemoryDisplay from './AvatarMemoryDisplay'
+import toast from 'react-hot-toast'
 
 const MemoryControls = ({ name, onTabChange }) => {
 
-    const { openPopOverModal } = useAppContext();
+    const { openPopOverModal, axios, getToken } = useAppContext();
+    const [avatarMemoryStatus, setAvatarMemoryStatus] = useState(false);
+    const [personalizationMemoryStatus, setPersonalizationMemoryStatus] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [avatarProcessing, setAvatarProcessing] = useState(false);
+    const [personalizationProcessing, setPersonalizationProcessing] = useState(false);
+
+    const fetchMemorySettings = async () => {
+
+        setLoading(true);
+
+        try {
+
+            const token = await getToken();
+
+            const { data } = await axios.get(
+                "/api/user/memory-settings",
+                { headers: { Authorization: token } }
+            );
+
+            if (data.success) {
+
+                setAvatarMemoryStatus(data.memorySettings.avatarMemoryEnabled);
+
+                setPersonalizationMemoryStatus(
+                    data.memorySettings.personalizationMemoryEnabled
+                );
+
+            }
+
+        } catch (err) {
+            toast.error("Failed to load memory settings");
+        } finally {
+            setLoading(false);
+        }
+
+    };
+
+    const handleToggle = async (type) => {
+
+        if (avatarProcessing || personalizationProcessing) return;
+
+        const isAvatar = type === "avatar";
+
+        const newValue = isAvatar ? !avatarMemoryStatus : !personalizationMemoryStatus;
+
+        isAvatar ? setAvatarProcessing(prev => !prev) : setPersonalizationProcessing(prev => !prev);
+        isAvatar ? setAvatarMemoryStatus(newValue) : setPersonalizationMemoryStatus(newValue);
+
+        try {
+
+            const token = await getToken();
+
+            await axios.patch(
+                "/api/user/memory-settings",
+                {
+                    updates: { [isAvatar ? "avatarMemoryEnabled" : "personalizationMemoryEnabled"]: newValue },
+                },
+                { headers: { Authorization: token } }
+            );
+
+        } catch (err) {
+
+            isAvatar ? setAvatarMemoryStatus(!newValue) : setPersonalizationMemoryStatus(!newValue);
+
+            toast.error("Failed to update memory setting");
+
+        } finally {
+            isAvatar ? setAvatarProcessing(prev => !prev) : setPersonalizationProcessing(prev => !prev);
+        }
+
+    };
 
     const handleAvatarMemoryManageClick = () => {
 
         openPopOverModal({
-            title: "Avatar Memories", 
-            size: "xxl", 
+            title: "Avatar Memories",
+            size: "lg",
             content: (
-                <AvatarMemoryDisplay/>
+                <AvatarMemoryDisplay avatarMemoryStatus={avatarMemoryStatus}/>
             )
         });
 
+    }
+
+    useEffect(() => {
+
+        fetchMemorySettings();
+
+    }, []);
+
+    if(loading) {
+        return (
+            <div className='flex w-full justify-center items-center'>
+                <img src={assets.loading_icon} className='w-5 h-5 dark:invert animate-spin' alt="" />
+            </div>
+        )
     }
 
     return (
@@ -33,20 +119,21 @@ const MemoryControls = ({ name, onTabChange }) => {
                     icon={assets.avatars_icon}
                     title="Avatar memory"
                     description="Remembers user summaries, emotional patterns, and facts separately for each avatar."
-                    enabled={true}
-                    onToggle={() => {}}
+                    enabled={avatarMemoryStatus}
+                    onToggle={() => handleToggle("avatar")}
                     onManage={handleAvatarMemoryManageClick}
+                    processing={avatarProcessing}
                 />
 
                 <MemoryControlCard
                     icon={assets.settings_icon}
                     title="Personalization memory"
                     description="Saves your tone, style, and preference settings across chats."
-                    enabled={true}
-                    onToggle={() => {}}
+                    enabled={personalizationMemoryStatus}
+                    onToggle={() => handleToggle("personalization")}
                     onManage={() => onTabChange("personalization")}
+                    processing={personalizationProcessing}
                 />
-
 
             </div>
 

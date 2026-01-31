@@ -21,9 +21,10 @@ app.use(cors({
         "x-chat-name", 
         "x-llm-warning", 
         "x-llm-remaining", 
+        "x-llm-window",
         "x-llm-locked-provider",
         "x-llm-locked", 
-        "x-llm-cooldown"
+        "x-llm-cooldown",
     ]
 }));
 

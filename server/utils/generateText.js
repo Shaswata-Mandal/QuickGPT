@@ -48,9 +48,10 @@ export const generateText = async ({ userId, model = LLM_PROVIDERS.AUTO, prompt,
         return {
             text,
             meta: {
-                provider,
+                provider: limit.provider,
                 remaining: limit.remaining,
                 nearLimit: limit.nearLimit,
+                limitWindow: limit.limitWindow,
             },
         };
         

@@ -115,7 +115,7 @@ const ChatSearchBox = () => {
     }
 
     return (
-        <div className='w-full flex flex-col gap-5 min-h-[60vh] p-5'>
+        <div className='w-full flex flex-col gap-5 min-h-[50vh] p-5'>
 
             {/* Search input box, sort, chatType and new chat buttons */}
             <div className='flex flex-col gap-3'>
@@ -207,84 +207,85 @@ const ChatSearchBox = () => {
             </div>
 
             {/* Displaying filtered chats */}
-            <div className={`flex-1 flex ${!hasChats ? "items-center" : ""} overflow-y-auto`}>
+            <div className='max-h-70 sm:max-h-75 overflow-y-scroll'>
 
-                {!hasChats ?
-                    (
-                        <NothingHere />
+                <div className={`flex-1 flex flex-col gap-5 ${!hasChats ? "items-center" : ""}`}>
 
-                    )
-                    :
-                    (
-                        Object.entries(processedChats).map(([group, chats]) => (
+                    {!hasChats ?
+                        (
+                            <NothingHere />
 
-                            <div className='w-full' key={group}>
+                        )
+                        :
+                        (
+                            Object.entries(processedChats).map(([group, chats]) => (
 
-                                <p className="text-xs font-medium text-gray-500 mb-3">
-                                    {group}
-                                </p>
+                                <div className='w-full' key={group}>
 
-                                <div className='flex flex-col gap-3'>
+                                    <p className="text-xs font-medium text-gray-500 mb-3">
+                                        {group}
+                                    </p>
 
-                                    {
-                                        chats?.map(chat => (
+                                    <div className='flex flex-col gap-3'>
 
-                                            <div
-                                                className={`flex items-center justify-between py-1 md:py-2 px-2 md:px-3 dark:bg-[#57317c]/30 border border-gray-300 dark:border-[#80609f]/15 rounded-md cursor-pointer`}
-                                                key={chat._id}
-                                            >
+                                        {
+                                            chats?.map(chat => (
 
-                                                <div className='flex gap-2 items-center'>
+                                                <div
+                                                    className={`flex items-center justify-between py-1 md:py-2 px-2 md:px-3 dark:bg-[#57317c]/30 border border-gray-300 dark:border-[#80609f]/15 rounded-md cursor-pointer`}
+                                                    key={chat._id}
+                                                >
 
-                                                    <img src={assets.chat_icon} className='w-6 h-6 dark:invert' alt="" />
+                                                    <div className='flex gap-2 items-center'>
 
-                                                    <div className='dark:invert'>
+                                                        <img src={assets.chat_icon} className='w-6 h-6 dark:invert' alt="" />
 
-                                                        <p className='truncate w-full text-sm'>
-                                                            {chat.name ? (chat.name?.length < 22 ? chat.name : `${chat.name?.slice(0, 22)}...`) : "New Chat"}
-                                                        </p>
+                                                        <div className='dark:invert'>
 
-                                                        <p className='text-xs'>{moment(chat.updatedAt).fromNow()}</p>
+                                                            <p className='truncate w-full text-sm'>
+                                                                {chat.name ? (chat.name?.length < 22 ? chat.name : `${chat.name?.slice(0, 22)}...`) : "New Chat"}
+                                                            </p>
+
+                                                            <p className='text-xs'>{moment(chat.updatedAt).fromNow()}</p>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div className='flex gap-1'>
+
+                                                        <img
+                                                            onClick={() => {
+                                                                navigate(`/chat/${chat._id}`);
+                                                                closeTopPopOverModal();
+                                                            }}
+                                                            src={assets.new_tab_icon}
+                                                            className='max-sm:hidden w-6 h-6 dark:invert active:scale-95'
+                                                            alt=""
+                                                        />
+
+                                                        <img
+                                                            src={assets.pin_icon}
+                                                            className='w-6 h-6 dark:invert active:scale-95 hidden'
+                                                            alt=""
+                                                        />
 
                                                     </div>
 
                                                 </div>
 
-                                                <div className='flex gap-1'>
+                                            ))
+                                        }
 
-                                                    <img
-                                                        onClick={() => {
-                                                            navigate(`/chat/${chat._id}`);
-                                                            closeTopPopOverModal();
-                                                        }}
-                                                        src={assets.new_tab_icon}
-                                                        className='max-sm:hidden w-6 h-6 dark:invert active:scale-95'
-                                                        alt=""
-                                                    />
-
-                                                    <img
-                                                        onClick={() => {
-
-                                                        }}
-                                                        src={assets.pin_icon}
-                                                        className='w-6 h-6 dark:invert active:scale-95'
-                                                        alt=""
-                                                    />
-
-                                                </div>
-
-                                            </div>
-
-                                        ))
-                                    }
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            ))
+                        )
+                    }
 
-                        ))
-                    )
-                }
+                </div>
 
             </div>
 

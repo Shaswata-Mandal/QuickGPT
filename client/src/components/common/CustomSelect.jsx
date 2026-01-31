@@ -28,13 +28,13 @@ const CustomSelect = ({ options = [], onChange, value, placeholder = "Select opt
         <div className='relative w-full' ref={dropdownRef}>
 
             {/* Trigger */}
-            <button type='button' onClick={() => setIsOpen(prev => !prev)} className='w-full flex justify-between items-center border dark:border-white rounded-md gap-1 px-2 py-1'>
+            <button type='button' onClick={() => setIsOpen(prev => !prev)} className='cursor-pointer w-full flex justify-between items-center border dark:border-white rounded-md gap-1 px-2 py-1'>
 
-                <span className='max-w-23 text-sm bg-transparent text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none'>{value.charAt(0).toUpperCase() + value.slice(1)}</span>
+                <span className='max-w-23 text-sm bg-transparent text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none'>{value?.charAt(0).toUpperCase() + value?.slice(1)}</span>
 
                 <img
                     src={assets.down_arrow_icon}
-                    className={`w-5 h-5 cursor-pointer transition-transform dark:invert ${isOpen ? "rotate-180" : ""}`}
+                    className={`w-5 h-5 transition-transform dark:invert ${isOpen ? "rotate-180" : ""}`}
                     alt=""
                 />
 

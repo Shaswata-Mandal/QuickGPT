@@ -39,9 +39,20 @@ const userSchema = new mongoose.Schema({
         type: Boolean, 
         default: false,
     }, 
+    memorySettings: {
+        avatarMemoryEnabled: {
+            type: Boolean, 
+            default: false,
+        }, 
+        personalizationMemoryEnabled: {
+            type: Boolean, 
+            default: false,
+        },
+    },
     personalization: {
         baseStyle: {
             type: String, 
+            enum: ["default", "professional", "friendly", "candid", "quirky", "efficient", "nerdy", "cynical"],
             default: "default"
         }, 
         tone: {

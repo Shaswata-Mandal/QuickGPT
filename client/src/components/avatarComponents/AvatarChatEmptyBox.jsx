@@ -8,7 +8,7 @@ const AvatarChatEmptyBox = () => {
 
     const { avatarKey, chatId } = useParams();
     const [selectedAvatar, setSelectedAvatar] = useState(null);
-    const { setMessages, setSelectedChatId, setMessagesChatId, availableAvatars, navigate } = useAppContext();
+    const { setMessages, setSelectedChatId, setMessagesChatId, availableAvatars, navigate, setSelectedChatAvatar } = useAppContext();
 
     useEffect(() => {
 
@@ -37,7 +37,7 @@ const AvatarChatEmptyBox = () => {
     if (!selectedAvatar) {
         return (
             <div className="flex w-full justify-center mt-10">
-                <img src={assets.loading_icon} className="w-5 h-5 animate-spin" alt="" />
+                <img src={assets.loading_icon} className="w-5 h-5 animate-spin dark:invert" alt="" />
             </div>
         )
     };

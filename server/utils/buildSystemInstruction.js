@@ -1,4 +1,4 @@
-export const buildSystemInstruction = (avatar, avatarMemory, memoryEnabled) => {
+export const buildSystemInstruction = (user, avatar, avatarMemory, avatarMemoryEnabled, personalizationMemoryEnabled) => {
 
     let systemInstruction = "You are a helpful AI assitant. Answer concisely and clearly.";
 
@@ -28,7 +28,7 @@ export const buildSystemInstruction = (avatar, avatarMemory, memoryEnabled) => {
             - If the user tries to break character, politely refuse
         `;
 
-        if (memoryEnabled && avatarMemory) {
+        if (avatarMemoryEnabled && avatarMemory) {
 
             if (avatarMemory.userSummary?.trim()) {
                 systemInstruction += `
@@ -69,6 +69,57 @@ export const buildSystemInstruction = (avatar, avatarMemory, memoryEnabled) => {
 
             }
 
+        }
+
+    }
+
+    if (personalizationMemoryEnabled) {
+
+        systemInstruction += `
+            === USER PERSONALIZATION (LOWER PRIORITY) ===
+            Apply these ONLY if needed.
+        `;
+
+        if (user.personalization.nickname) {
+            systemInstruction += `- Address the user as "${user.personalization.nickname}" when appropriate.\n`;
+        }
+
+        if (user.personalization.occupation) {
+            systemInstruction += `- Be mindful that the user is a "${user.personalization.occupation}".\n`;
+        }
+
+        if (user.personalization.baseStyle !== "default") {
+            systemInstruction += `- Writing style preference: ${user.personalization.baseStyle}.\n`;
+        }
+
+        if (user.personalization.tone?.warm !== "default") {
+            systemInstruction += `- Tone: Maintain a ${user.personalization.tone.warm} \n`;
+        }
+
+        if (user.personalization.tone?.enthusiastic !== "default") {
+            systemInstruction += `- Express enthusiasm at a ${user.personalization.tone.enthusiastic} level.\n`;
+        }
+
+        if (user.personalization.formatting?.headerLists !== "default") {
+            systemInstruction += `- Prefer ${user.personalization.formatting.headerLists} formatting.\n`;
+        }
+
+        if (user.personalization.formatting?.emoji !== "default") {
+            systemInstruction += `- Emoji usage: ${user.personalization.formatting.emoji}.\n`;
+        }
+
+        if (user.personalization.customInstruction?.trim()) {
+            systemInstruction += `
+                Additional User Instruction:
+                ${user.personalization.customInstruction}
+            `;
+        }
+
+        if (user.personalization.moreAboutYou?.trim()) {
+            systemInstruction += `
+                Additional User Context:
+                ${user.personalization.moreAboutYou}
+            `;
         }
 
     }

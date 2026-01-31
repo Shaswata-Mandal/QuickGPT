@@ -102,7 +102,7 @@ const SharedChatsDisplay = () => {
       }
 
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       toast.error("Failed to unshare chats");
     } finally {
       setProcessing(false);

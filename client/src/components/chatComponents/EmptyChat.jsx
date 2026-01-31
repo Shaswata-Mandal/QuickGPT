@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom'
 const EmptyChat = () => {
 
     const { chatId } = useParams();
-    const { theme, setMessages, setSelectedChatId, setMessagesChatId } = useAppContext();
+    const { theme, setMessages, setSelectedChatId, setMessagesChatId, setSelectedChatAvatar } = useAppContext();
 
     useEffect(() => {
 
