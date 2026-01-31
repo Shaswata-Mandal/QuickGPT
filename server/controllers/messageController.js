@@ -10,10 +10,15 @@ import { buildConversationContext } from "../utils/buildConversationContext.js";
 import { buildSystemInstruction } from "../utils/buildSystemInstruction.js";
 import { summarizeChat } from "../utils/summarizeChat.js";
 import { generateText } from "../utils/generateText.js";
+import { canUserAffordCredits } from "../utils/checkCredits.js";
 
 const SUMMARY_CHUNK_SIZE = 2;
 const AVATAR_MEMORY_CHUNK_SIZE = 2;
 const AVATAR_MEMORY_TRIGGER = 4;
+const CREDIT_COST = {
+    text: 2, 
+    image: 5,
+}
 
 const getReply = ({content, isImage = false, isPublished = false, messageType = "normal"}) => {
 
@@ -73,9 +78,11 @@ export const textMessageController = async (req, res) => {
         await chat.save();
 
         // Check credits--------------------------------------------------------------
-        if (user.freeCredits < 1 && user.creditBalance < 1) {
+        const canProceed = await canUserAffordCredits(userId, CREDIT_COST.text);
 
-            const errorReply = getReply({content: "You have reached your credit limit! Please upgrade for more!", messageType: "error"});
+        if (!canProceed) {
+
+            const errorReply = getReply({content: "Insufficient credits! Please buy credits to continue!", messageType: "error"});
             chat.messages.push(errorReply);
             await chat.save();
 
@@ -227,7 +234,7 @@ export const textMessageController = async (req, res) => {
         }
 
         // Deduct credits
-        await deductCredits(userId, 2);
+        await deductCredits(userId, CREDIT_COST.text);
 
         return res.json({ success: true, reply });
 
@@ -239,7 +246,7 @@ export const textMessageController = async (req, res) => {
 
         if (aiError.message === "RATE_LIMIT") {
 
-            errorReply = getReply({content: `Free AI limit reached. Please wait for some time before retrying or try using some other model.`, messageType: "error"});
+            errorReply = getReply({content: `Free AI usage limit reached. Please wait for some time before retrying or try using some other model.`, messageType: "error"});
 
             res.setHeader("x-llm-locked", "true");
             res.setHeader("x-llm-cooldown", aiError.retryAfter);
@@ -314,7 +321,9 @@ export const imageMessageController = async (req, res) => {
         }
 
         // Check credits
-        if (user.freeCredits < 5 && user.creditBalance < 5) {
+        const canProceed = await canUserAffordCredits(userId, CREDIT_COST.image);
+
+        if (canProceed) {
 
             const errorReply = getReply({content: "You don't have enough credits to use this feature!", messageType: "error"});
             chat.messages.push(errorReply);
@@ -429,7 +438,7 @@ export const imageMessageController = async (req, res) => {
             await chat.save();
 
             // Deduct credits
-            await deductCredits(userId, 5);
+            await deductCredits(userId, CREDIT_COST.image);
 
             return res.json({
                 success: true,

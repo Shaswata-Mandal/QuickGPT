@@ -48,14 +48,20 @@ const Navbar = () => {
         <div className='flex gap-1.5 sm:gap-2'>
 
           {/* Credits Purchase */}
-          <div onClick={() => handleCreditsClick()} className='flex items-center gap-1.5 px-2 py-1 border min-w-[123px] rounded hover:border-gray-300 cursor-pointer hover:scale-103 transition-all'>
+          <button 
+            disabled={isCreditsLoading}
+            onClick={() => handleCreditsClick()} className='disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 px-2 py-1 border min-w-fit rounded hover:border-gray-300 cursor-pointer hover:scale-103 transition-all'
+          >
 
             <img src={assets.diamond_icon} className='w-4.5 dark:invert' alt="" />
-            <div className='flex gap-1 text-sm'>
-              Credits:
+
+            <div className='flex gap-1 items-center text-sm'>
+
+              <span>Credits:</span>
+
               {isCreditsLoading ?
                 (
-                  <div className='loader flex items-center ml-1 gap-1.5'>
+                  <div className='loader flex items-center ml-1 gap-1'>
 
                     <div className='w-1 h-1 rounded-full bg-gray-500 dark:bg-white animate-bounce'></div>
                     <div className='w-1 h-1 rounded-full bg-gray-500 dark:bg-white animate-bounce'></div>
@@ -68,9 +74,10 @@ const Navbar = () => {
                   <span>{credits + freeCredits}</span>
                 )
               }
+
             </div>
 
-          </div>
+          </button>
 
 
           {/* Community Images */}

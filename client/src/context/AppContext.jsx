@@ -14,6 +14,7 @@ axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
 //4) Summarize the whole chat in one click
 //5) Scroll down button
 //6) Advanced search feature - avatar filter
+//7) Show loading on Purchase button click in credits page
 
 const AppContext = createContext();
 

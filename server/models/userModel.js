@@ -30,14 +30,6 @@ const userSchema = new mongoose.Schema({
     freeCredits: {
         type: Number,
         default: 1,
-    },
-    avatarMemoryEnabled: {
-        type: Boolean, 
-        default: false,
-    }, 
-    personalizationMemoryEnabled: {
-        type: Boolean, 
-        default: false,
     }, 
     memorySettings: {
         avatarMemoryEnabled: {
