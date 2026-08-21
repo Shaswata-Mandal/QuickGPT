@@ -358,22 +358,39 @@ export const imageMessageController = async (req, res) => {
 
         }
 
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        const MAX_ATTEMPTS = 14;
+        const POLL_DELAY_MS = 3000; 
+
         let aiImageResponse;
+        let lastNonImageBody = null;
+
         try {
 
-            aiImageResponse = await axios.get(generatedImageUrl, {
-                responseType: "arraybuffer",
-                timeout: 30000 // 30 second timeout
-            });
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+
+                const res = await axios.get(generatedImageUrl, {
+                    responseType: "arraybuffer",
+                    timeout: 30000
+                });
+
+                const isIntermediate = res.headers?.["is-intermediate-response"] === "true";
+
+                if (!isIntermediate) {
+                    aiImageResponse = res;
+                    break;
+                }
+
+                lastNonImageBody = Buffer.from(res.data).toString("utf-8").slice(0, 500);
+                console.error(`IMAGE NOT READY (attempt ${attempt}/${MAX_ATTEMPTS}): ${lastNonImageBody}`);
+
+                if (attempt < MAX_ATTEMPTS) {
+                    await sleep(POLL_DELAY_MS);
+                }
+
+            }
 
         } catch (axiosError) {
-
-            // console.error("❌ ImageKit AI request failed:", axiosError.message);
-
-            // if (axiosError.response) {
-            //     console.error("Response status:", axiosError.response.status);
-            //     console.error("Response data:", axiosError.response.data);
-            // }
 
             const errorReply = getReply({content: "Image generation limit reached. Upgrade for more.", messageType: "error"});
             chat.messages.push(errorReply);
@@ -387,10 +404,24 @@ export const imageMessageController = async (req, res) => {
 
         }
 
+        if (!aiImageResponse) {
+
+            console.error("IMAGEKIT NON-IMAGE RESPONSE (final):", lastNonImageBody);
+
+            const errorReply = getReply({content: "Image is taking longer than usual to generate. Please try again.", messageType: "error"});
+            chat.messages.push(errorReply);
+            await chat.save();
+
+            return res.json({
+                success: true,
+                reply: errorReply,
+                chatName
+            });
+
+        }
+
         // Check if we got valid image data
         if (!aiImageResponse.data || aiImageResponse.data.length === 0) {
-
-            // console.log("❌ Empty image data received");
 
             const errorReply = getReply({content: "Image generation failed. The service returned empty data. Please try again.", messageType: "error"});
             chat.messages.push(errorReply);
