@@ -8,7 +8,7 @@ export const summarizeChat = async ({ messagesChunk, existingSummary = "", avata
     const chunkText = messagesChunk
         .filter(
             msg => 
-                msg.isImage &&
+                !msg.isImage &&
                 typeof msg.content === "string" &&
                 msg.messageType === "normal"
         )
@@ -80,7 +80,7 @@ export const summarizeChat = async ({ messagesChunk, existingSummary = "", avata
             - Emotional state = long-term emotional tendency (e.g., anxious, optimistic)
             - Do NOT store transient emotions (e.g., sad today)
 
-            If nothing worth remembering, return Exactly:
+            If nothing worth remembering please strictly, return Exactly:
             {
             "userSummary": null,
             "facts": [],

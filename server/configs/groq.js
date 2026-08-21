@@ -24,7 +24,7 @@ export const generateGroqText = async (prompt, contextMessages = [], systemInstr
         messages.push({ role: "user", content: prompt });
 
         const response = await groq.chat.completions.create({
-            model: "llama-3.1-8b-instant",
+            model: "openai/gpt-oss-20b",
             messages,
             temperature: 0.7
         });
@@ -33,7 +33,9 @@ export const generateGroqText = async (prompt, contextMessages = [], systemInstr
 
     } catch (error) {
 
-        if (err?.status === 429) {
+        console.error("GROQ ERROR:", error?.status, error?.message);
+
+        if (error?.status === 429) {
             const e = new Error("RATE_LIMIT");
             e.retryAfter = 60;
             e.provider = "groq";

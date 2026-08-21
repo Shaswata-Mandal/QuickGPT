@@ -36,6 +36,8 @@ export const generateGeminiText = async (prompt, contextMessages = [], systemIns
 
   } catch (err) {
 
+    console.error("GEMINI ERROR:", JSON.stringify(err?.error || err?.message || err, null, 2));
+
     const status = err?.status || err?.error?.code;
 
     if (status === 429) {

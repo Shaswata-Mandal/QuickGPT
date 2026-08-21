@@ -12,9 +12,9 @@ import { summarizeChat } from "../utils/summarizeChat.js";
 import { generateText } from "../utils/generateText.js";
 import { canUserAffordCredits } from "../utils/checkCredits.js";
 
-const SUMMARY_CHUNK_SIZE = 2;
-const AVATAR_MEMORY_CHUNK_SIZE = 2;
-const AVATAR_MEMORY_TRIGGER = 4;
+const SUMMARY_CHUNK_SIZE = 8;
+const AVATAR_MEMORY_CHUNK_SIZE = 10;
+const AVATAR_MEMORY_TRIGGER = 20;
 const CREDIT_COST = {
     text: 2, 
     image: 5,
@@ -77,6 +77,12 @@ export const textMessageController = async (req, res) => {
         chat.messages.push(userMessage);
         await chat.save();
 
+        //Rename the chat only one time when there is first user message---------------
+        let chatName = null;
+        if (chat.messages.length === 1) {
+            chatName = await renameChat(userId, chatId);
+        }
+
         // Check credits--------------------------------------------------------------
         const canProceed = await canUserAffordCredits(userId, CREDIT_COST.text);
 
@@ -91,12 +97,6 @@ export const textMessageController = async (req, res) => {
                 reply: errorReply
             });
 
-        }
-
-        //Rename the chat only one time when there is first user message---------------
-        let chatName = null;
-        if (chat.messages.length === 1) {
-            chatName = await renameChat(userId, chatId);
         }
 
         //Loading avatar and avatar memory if chat mode is avatar-----------------------
@@ -323,7 +323,7 @@ export const imageMessageController = async (req, res) => {
         // Check credits
         const canProceed = await canUserAffordCredits(userId, CREDIT_COST.image);
 
-        if (canProceed) {
+        if (!canProceed) {
 
             const errorReply = getReply({content: "You don't have enough credits to use this feature!", messageType: "error"});
             chat.messages.push(errorReply);
