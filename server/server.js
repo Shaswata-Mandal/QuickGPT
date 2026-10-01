@@ -12,7 +12,22 @@ import avatarRouter from './routes/avatarRoutes.js'
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-await connectDB();
+// If connectDB() ever throws a database related error, a 500 error response will be sent
+// without affecting the whole app startup
+app.use(async (req, res, next) => {
+
+    try {
+
+        await connectDB();
+        next();
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+});
 
 
 //Middleware
