@@ -11,20 +11,7 @@ import avatarRouter from './routes/avatarRoutes.js'
 
 const app = express();
 
-// If connectDB() ever throws a database related error, a 500 error response will be sent
-// without affecting the whole app startup
-app.use(async (req, res, next) => {
-    try {
-        await connectDB();
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
-
-
-//Middleware
-app.use(cors({
+const corsOptions = {
     exposedHeaders: [
         "x-chat-name",
         "x-llm-warning",
@@ -34,9 +21,29 @@ app.use(cors({
         "x-llm-locked",
         "x-llm-cooldown",
     ]
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
+
+// If connectDB() ever throws a database related error, a 500 error response will be sent
+// without affecting the whole app startup
+app.use(async (req, res, next) => {
+
+    try {
+
+        await connectDB();
+        next();
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+});
 
 
 //Routes
