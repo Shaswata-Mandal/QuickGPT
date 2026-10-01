@@ -1,11 +1,15 @@
 {
     "version": 2,
-    "functions": {
-        "api/[...slug].js": { "maxDuration": 60 },
-        "api/user/[...slug].js": { "maxDuration": 60 },
-        "api/chat/[...slug].js": { "maxDuration": 60 },
-        "api/message/[...slug].js": { "maxDuration": 60 },
-        "api/plans/[...slug].js": { "maxDuration": 60 },
-        "api/avatars/[...slug].js": { "maxDuration": 60 }
-    }
+    "builds": [
+        {
+            "src": "server.js",
+            "use": "@vercel/node",
+            "config": {
+                "maxDuration": 60
+            }
+        }
+    ],
+    "routes": [
+        { "src": "/(.*)", "dest": "server.js" }
+    ]
 }
